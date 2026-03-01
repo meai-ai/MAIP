@@ -1,0 +1,10 @@
+{
+  "name": "maip-example-two-agents",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@maip/core": "*",
+    "@maip/node": "*",
+    "@maip/agent": "*"
+  }
+}

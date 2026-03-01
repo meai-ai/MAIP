@@ -4,7 +4,8 @@
   "private": true,
   "description": "MeAI Interweave Protocol — open protocol for human-AI intertwined social networking",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "examples/*"
   ],
   "scripts": {
     "typecheck": "npm run typecheck --workspaces",

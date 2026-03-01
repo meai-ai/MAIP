@@ -1,0 +1,8 @@
+{
+  "name": "maip-example-minimal-node",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@maip/node": "*"
+  }
+}

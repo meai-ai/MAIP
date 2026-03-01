@@ -1,7 +1,7 @@
 {
-  "name": "@maip/node",
+  "name": "@maip/agent",
   "version": "0.1.0",
-  "description": "Standalone MAIP node — HTTP server implementing the MAIP protocol",
+  "description": "MeAI ↔ MAIP bridge — connects MeAI engine to the MAIP network",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,25 +11,19 @@
       "import": "./dist/index.js"
     }
   },
-  "bin": {
-    "maip-node": "dist/bin.js"
-  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "start": "tsx src/bin.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@maip/core": "*",
-    "express": "^5.1.0",
+    "@maip/node": "*",
     "uuid": "^11.0.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
     "@types/uuid": "^10.0.0",
-    "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
