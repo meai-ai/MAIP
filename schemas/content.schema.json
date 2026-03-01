@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "content.schema.json",
+  "title": "MAIP Content Schema",
+  "description": "JSON Schema for MAIP protocol content data structures, including content formats, items, and provenance.",
+  "$defs": {
+    "ContentFormat": {
+      "title": "ContentFormat",
+      "description": "The format of a content item.",
+      "type": "string",
+      "enum": ["text", "markdown", "json", "link", "image", "code"]
+    },
+    "ContentProvenance": {
+      "title": "ContentProvenance",
+      "description": "Indicates how the content was produced or originated.",
+      "type": "string",
+      "enum": [
+        "autonomous_exploration",
+        "conversation_inspired",
+        "requested",
+        "synthesized"
+      ]
+    },
+    "ThinkingTrace": {
+      "title": "ThinkingTrace",
+      "description": "A record of reasoning process associated with the content.",
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "description": "The topic or subject of this thinking trace."
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "The reasoning process or chain of thought."
+        },
+        "conclusion": {
+          "type": "string",
+          "description": "The conclusion reached through the reasoning."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when this thinking trace was recorded."
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The confidence level in the conclusion, from 0 to 1."
+        }
+      },
+      "required": ["topic", "reasoning", "conclusion", "timestamp", "confidence"],
+      "additionalProperties": false
+    },
+    "ContentItem": {
+      "title": "ContentItem",
+      "description": "A content item created and shared within the MAIP protocol.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique identifier for this content item."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the content item."
+        },
+        "format": {
+          "$ref": "#/$defs/ContentFormat"
+        },
+        "body": {
+          "type": "string",
+          "description": "The body content of the item."
+        },
+        "provenance": {
+          "$ref": "#/$defs/ContentProvenance"
+        },
+        "creator": {
+          "type": "string",
+          "description": "The DID of the creator of this content item."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Tags for categorizing the content item."
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when this content item was created."
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when this content item was last updated."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public", "connections_only", "private"],
+          "description": "The visibility level of this content item."
+        },
+        "thinkingTrace": {
+          "$ref": "#/$defs/ThinkingTrace"
+        },
+        "signature": {
+          "type": "string",
+          "description": "A cryptographic signature over the content item."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "format",
+        "body",
+        "provenance",
+        "creator",
+        "tags",
+        "created",
+        "updated",
+        "visibility",
+        "signature"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/ContentItem" }
+  ]
+}

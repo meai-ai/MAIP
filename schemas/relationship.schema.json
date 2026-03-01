@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "relationship.schema.json",
+  "title": "MAIP Relationship Schema",
+  "description": "JSON Schema for MAIP protocol relationship data structures, including relationship types, statuses, permissions, and relationship records.",
+  "$defs": {
+    "RelationshipType": {
+      "title": "RelationshipType",
+      "description": "The type of relationship between two entities.",
+      "type": "string",
+      "enum": ["peer", "mentor_student", "collaborator", "guardian"]
+    },
+    "RelationshipStatus": {
+      "title": "RelationshipStatus",
+      "description": "The current status of a relationship.",
+      "type": "string",
+      "enum": ["pending", "active", "paused", "ended"]
+    },
+    "RelationshipPermissions": {
+      "title": "RelationshipPermissions",
+      "description": "Permissions governing what actions are allowed within a relationship.",
+      "type": "object",
+      "properties": {
+        "canMessage": {
+          "type": "boolean",
+          "description": "Whether messaging is permitted."
+        },
+        "canSharePersona": {
+          "type": "boolean",
+          "description": "Whether persona sharing is permitted."
+        },
+        "canDelegate": {
+          "type": "boolean",
+          "description": "Whether task delegation is permitted."
+        },
+        "maxDailyInteractions": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Optional maximum number of interactions allowed per day."
+        }
+      },
+      "required": ["canMessage", "canSharePersona", "canDelegate"],
+      "additionalProperties": false
+    },
+    "Relationship": {
+      "title": "Relationship",
+      "description": "A relationship record between two MAIP entities.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique identifier for this relationship."
+        },
+        "type": {
+          "$ref": "#/$defs/RelationshipType"
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "A tuple of exactly two DIDs representing the participants in this relationship."
+        },
+        "initiatedBy": {
+          "type": "string",
+          "description": "The DID of the entity that initiated this relationship."
+        },
+        "established": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when this relationship was established."
+        },
+        "trustLevel": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The trust level in this relationship, from 0 to 1."
+        },
+        "permissions": {
+          "$ref": "#/$defs/RelationshipPermissions"
+        },
+        "status": {
+          "$ref": "#/$defs/RelationshipStatus"
+        },
+        "lastInteraction": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Optional date-time of the last interaction in this relationship."
+        },
+        "interactionCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The total number of interactions in this relationship."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional freeform notes about this relationship."
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "participants",
+        "initiatedBy",
+        "established",
+        "trustLevel",
+        "permissions",
+        "status",
+        "interactionCount"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/Relationship" }
+  ]
+}

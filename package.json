@@ -1,0 +1,15 @@
+{
+  "name": "maip",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MeAI Interweave Protocol — open protocol for human-AI intertwined social networking",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm test --workspaces",
+    "build": "npm run build --workspaces"
+  },
+  "license": "MIT"
+}

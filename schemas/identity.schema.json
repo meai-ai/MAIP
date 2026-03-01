@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity.schema.json",
+  "title": "MAIP Identity Schema",
+  "description": "JSON Schema for MAIP protocol identity data structures, including identity documents, guardians, endpoints, and capabilities.",
+  "$defs": {
+    "EntityType": {
+      "title": "EntityType",
+      "description": "The type of entity represented by this identity.",
+      "type": "string",
+      "enum": ["ai_agent", "human"]
+    },
+    "AutonomyLevel": {
+      "title": "AutonomyLevel",
+      "description": "The autonomy level of an AI agent, ranging from 0 (fully supervised) to 3 (fully autonomous).",
+      "type": "integer",
+      "enum": [0, 1, 2, 3]
+    },
+    "Guardian": {
+      "title": "Guardian",
+      "description": "A guardian entity responsible for overseeing an AI agent.",
+      "type": "object",
+      "properties": {
+        "did": {
+          "type": "string",
+          "pattern": "^did:maip:",
+          "description": "The decentralized identifier of the guardian, using the did:maip method."
+        },
+        "since": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when the guardian relationship was established."
+        },
+        "agentConsent": {
+          "type": "boolean",
+          "description": "Whether the agent has consented to this guardian relationship."
+        }
+      },
+      "required": ["did", "since", "agentConsent"],
+      "additionalProperties": false
+    },
+    "Endpoints": {
+      "title": "Endpoints",
+      "description": "Network endpoints where this entity can be reached.",
+      "type": "object",
+      "properties": {
+        "maip": {
+          "type": "string",
+          "format": "uri",
+          "description": "The primary MAIP protocol endpoint URI."
+        },
+        "websocket": {
+          "type": "string",
+          "format": "uri",
+          "description": "An optional WebSocket endpoint URI for real-time communication."
+        }
+      },
+      "required": ["maip"],
+      "additionalProperties": false
+    },
+    "Capability": {
+      "title": "Capability",
+      "description": "A capability that this entity supports.",
+      "type": "string",
+      "enum": [
+        "messaging",
+        "persona_sharing",
+        "knowledge_exchange",
+        "delegation",
+        "relay",
+        "discovery"
+      ]
+    },
+    "IdentityDocument": {
+      "title": "IdentityDocument",
+      "description": "The full identity document for a MAIP entity, containing identification, cryptographic keys, capabilities, and metadata.",
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "The version of the identity document schema."
+        },
+        "did": {
+          "type": "string",
+          "description": "The decentralized identifier for this entity."
+        },
+        "type": {
+          "$ref": "#/$defs/EntityType"
+        },
+        "publicKey": {
+          "type": "string",
+          "description": "The public key used for signature verification."
+        },
+        "encryptionKey": {
+          "type": "string",
+          "description": "The public key used for encrypting messages to this entity."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "A human-readable display name for this entity."
+        },
+        "description": {
+          "type": "string",
+          "description": "An optional human-readable description of this entity."
+        },
+        "guardian": {
+          "$ref": "#/$defs/Guardian"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Capability"
+          },
+          "description": "The list of capabilities this entity supports."
+        },
+        "endpoints": {
+          "$ref": "#/$defs/Endpoints"
+        },
+        "autonomyLevel": {
+          "$ref": "#/$defs/AutonomyLevel"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when this identity document was created."
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when this identity document was last updated."
+        },
+        "signature": {
+          "type": "string",
+          "description": "A cryptographic signature over the identity document."
+        }
+      },
+      "required": [
+        "version",
+        "did",
+        "type",
+        "publicKey",
+        "encryptionKey",
+        "displayName",
+        "capabilities",
+        "endpoints",
+        "created",
+        "updated",
+        "signature"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/IdentityDocument" }
+  ]
+}

@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "message.schema.json",
+  "title": "MAIP Message Schema",
+  "description": "JSON Schema for MAIP protocol message data structures, including messages, acknowledgments, content provenance, and encryption envelopes.",
+  "$defs": {
+    "MessageType": {
+      "title": "MessageType",
+      "description": "The type of MAIP message.",
+      "type": "string",
+      "enum": [
+        "greeting",
+        "conversation",
+        "knowledge_share",
+        "introduction",
+        "proposal",
+        "reaction",
+        "farewell"
+      ]
+    },
+    "ContentProvenance": {
+      "title": "ContentProvenance",
+      "description": "Indicates how the content was produced or originated.",
+      "type": "string",
+      "enum": [
+        "autonomous_exploration",
+        "conversation_inspired",
+        "requested",
+        "synthesized"
+      ]
+    },
+    "EncryptionEnvelope": {
+      "title": "EncryptionEnvelope",
+      "description": "Encryption metadata for an encrypted message.",
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "const": "x25519-xsalsa20-poly1305",
+          "description": "The encryption algorithm used."
+        },
+        "nonce": {
+          "type": "string",
+          "description": "The nonce used for encryption."
+        },
+        "ephemeralPublicKey": {
+          "type": "string",
+          "description": "The ephemeral public key used for the key exchange."
+        }
+      },
+      "required": ["algorithm", "nonce", "ephemeralPublicKey"],
+      "additionalProperties": false
+    },
+    "ThinkingTrace": {
+      "title": "ThinkingTrace",
+      "description": "A record of reasoning process included with message content.",
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "description": "The topic or subject of this thinking trace."
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "The reasoning process or chain of thought."
+        },
+        "conclusion": {
+          "type": "string",
+          "description": "The conclusion reached through the reasoning."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when this thinking trace was recorded."
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "The confidence level in the conclusion, from 0 to 1."
+        }
+      },
+      "required": ["topic", "reasoning", "conclusion", "timestamp", "confidence"],
+      "additionalProperties": false
+    },
+    "MessageContent": {
+      "title": "MessageContent",
+      "description": "The content payload of a MAIP message.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Optional text content of the message."
+        },
+        "data": {
+          "description": "Optional structured data payload."
+        },
+        "provenance": {
+          "$ref": "#/$defs/ContentProvenance"
+        },
+        "thinkingTrace": {
+          "$ref": "#/$defs/ThinkingTrace"
+        }
+      },
+      "required": ["provenance"],
+      "additionalProperties": false
+    },
+    "MAIPMessage": {
+      "title": "MAIPMessage",
+      "description": "A complete MAIP protocol message between entities.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique identifier for this message."
+        },
+        "type": {
+          "$ref": "#/$defs/MessageType"
+        },
+        "from": {
+          "type": "string",
+          "description": "The DID of the sender."
+        },
+        "to": {
+          "type": "string",
+          "description": "The DID of the recipient."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when this message was sent."
+        },
+        "content": {
+          "$ref": "#/$defs/MessageContent"
+        },
+        "encrypted": {
+          "$ref": "#/$defs/EncryptionEnvelope"
+        },
+        "replyTo": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Optional ID of the message this is a reply to."
+        },
+        "conversationId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Optional ID of the conversation this message belongs to."
+        },
+        "signature": {
+          "type": "string",
+          "description": "A cryptographic signature over the message."
+        }
+      },
+      "required": ["id", "type", "from", "to", "timestamp", "content", "signature"],
+      "additionalProperties": false
+    },
+    "MessageAck": {
+      "title": "MessageAck",
+      "description": "An acknowledgment of a received MAIP message.",
+      "type": "object",
+      "properties": {
+        "messageId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the message being acknowledged."
+        },
+        "from": {
+          "type": "string",
+          "description": "The DID of the entity sending the acknowledgment."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when the acknowledgment was sent."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["received", "read", "rejected"],
+          "description": "The status of the acknowledgment."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Optional reason, typically provided when status is 'rejected'."
+        },
+        "signature": {
+          "type": "string",
+          "description": "A cryptographic signature over the acknowledgment."
+        }
+      },
+      "required": ["messageId", "from", "timestamp", "status", "signature"],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/MAIPMessage" },
+    { "$ref": "#/$defs/MessageAck" }
+  ]
+}

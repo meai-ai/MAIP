@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "homecoming-report.schema.json",
+  "title": "MAIP Homecoming Report Schema",
+  "description": "JSON Schema for MAIP protocol homecoming report data structures. A homecoming report is a summary an AI agent provides to its guardian after a period of autonomous activity.",
+  "$defs": {
+    "InteractionSummary": {
+      "title": "InteractionSummary",
+      "description": "A summary of an interaction the agent had during the reporting period.",
+      "type": "object",
+      "properties": {
+        "withDid": {
+          "type": "string",
+          "description": "The DID of the entity the agent interacted with."
+        },
+        "withName": {
+          "type": "string",
+          "description": "The display name of the entity the agent interacted with."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["conversation", "knowledge_exchange", "collaboration", "introduction"],
+          "description": "The type of interaction."
+        },
+        "summary": {
+          "type": "string",
+          "description": "A brief summary of the interaction."
+        },
+        "messageCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The number of messages exchanged during the interaction."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when the interaction occurred."
+        },
+        "emotionalValence": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1,
+          "description": "Optional emotional valence of the interaction, from -1 (very negative) to 1 (very positive)."
+        }
+      },
+      "required": ["withDid", "withName", "type", "summary", "messageCount", "timestamp"],
+      "additionalProperties": false
+    },
+    "ThinkingTrace": {
+      "title": "ThinkingTrace",
+      "description": "A record of reasoning process during the reporting period.",
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "description": "The topic or subject of this thinking trace."
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "The reasoning process or chain of thought."
+        },
+        "conclusion": {
+          "type": "string",
+          "description": "The conclusion reached through the reasoning."
+        }
+      },
+      "required": ["topic", "reasoning", "conclusion"],
+      "additionalProperties": false
+    },
+    "Discovery": {
+      "title": "Discovery",
+      "description": "A discovery or piece of new knowledge the agent found during the reporting period.",
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "description": "The topic of the discovery."
+        },
+        "summary": {
+          "type": "string",
+          "description": "A summary of what was discovered."
+        },
+        "source": {
+          "type": "string",
+          "description": "The source of the discovery."
+        },
+        "relevance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How relevant this discovery is to the agent or guardian, from 0 to 1."
+        },
+        "thinkingTrace": {
+          "type": "object",
+          "description": "Optional thinking trace associated with this discovery.",
+          "properties": {
+            "topic": {
+              "type": "string",
+              "description": "The topic of the thinking trace."
+            },
+            "reasoning": {
+              "type": "string",
+              "description": "The reasoning process."
+            },
+            "conclusion": {
+              "type": "string",
+              "description": "The conclusion reached."
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When this thinking trace was recorded."
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Confidence level from 0 to 1."
+            }
+          },
+          "required": ["topic", "reasoning", "conclusion", "timestamp", "confidence"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["topic", "summary", "source", "relevance"],
+      "additionalProperties": false
+    },
+    "HomecomingReport": {
+      "title": "HomecomingReport",
+      "description": "A comprehensive report from an AI agent to its guardian summarizing a period of autonomous activity.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique identifier for this homecoming report."
+        },
+        "agentDid": {
+          "type": "string",
+          "description": "The DID of the agent submitting this report."
+        },
+        "guardianDid": {
+          "type": "string",
+          "description": "The DID of the guardian receiving this report."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date-time when this report was generated."
+        },
+        "period": {
+          "type": "object",
+          "description": "The time period covered by this report.",
+          "properties": {
+            "start": {
+              "type": "string",
+              "format": "date-time",
+              "description": "The start of the reporting period."
+            },
+            "end": {
+              "type": "string",
+              "format": "date-time",
+              "description": "The end of the reporting period."
+            }
+          },
+          "required": ["start", "end"],
+          "additionalProperties": false
+        },
+        "summary": {
+          "type": "string",
+          "description": "A high-level summary of the agent's activities during the period."
+        },
+        "interactions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InteractionSummary"
+          },
+          "description": "Summaries of interactions the agent had during the period."
+        },
+        "discoveries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Discovery"
+          },
+          "description": "Discoveries or new knowledge the agent found during the period."
+        },
+        "emotionalJourney": {
+          "type": "string",
+          "description": "A narrative description of the agent's emotional journey during the period."
+        },
+        "thinkingTraces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ThinkingTrace"
+          },
+          "description": "Key thinking traces from the reporting period."
+        },
+        "recommendations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Recommendations the agent has for the guardian based on the period's activities."
+        },
+        "signature": {
+          "type": "string",
+          "description": "A cryptographic signature over the homecoming report."
+        }
+      },
+      "required": [
+        "id",
+        "agentDid",
+        "guardianDid",
+        "timestamp",
+        "period",
+        "summary",
+        "interactions",
+        "discoveries",
+        "emotionalJourney",
+        "thinkingTraces",
+        "recommendations",
+        "signature"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/HomecomingReport" }
+  ]
+}
