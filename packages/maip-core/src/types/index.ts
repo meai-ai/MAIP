@@ -60,6 +60,15 @@ export type {
   RelayMessage,
 } from "./transport.js";
 
+export type {
+  GuardianReputation,
+  BehaviorProfile,
+  AnomalyFlag,
+  IsolationRecord,
+  IsolationAppeal,
+  AIWill,
+} from "./governance.js";
+
 export {
   MAIP_ENDPOINTS,
   MAIP_HEADERS,

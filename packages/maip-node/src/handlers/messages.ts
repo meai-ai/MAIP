@@ -11,6 +11,7 @@ import {
   sign,
 } from "@maip/core";
 import type { NodeContext } from "../context.js";
+import { trackAndDetect } from "../behavior.js";
 
 /** Rate limit tracker: DID → { count, windowStart } */
 const rateLimits = new Map<string, { count: number; windowStart: number }>();
@@ -84,6 +85,31 @@ export function messagesHandler(ctx: NodeContext) {
         code: "INVALID_SIGNATURE",
       });
       return;
+    }
+
+    // Network isolation check — reject messages from isolated DIDs
+    const isolated = ctx.stores.isolations.filter(
+      (r) => r.did === message.from && r.status === "active"
+    );
+    if (isolated.length > 0) {
+      res.status(403).json({
+        ok: false,
+        error: "Sender is network-isolated",
+        code: "ISOLATED",
+      });
+      return;
+    }
+
+    // Behavioral anomaly detection
+    const anomalies = trackAndDetect(ctx.stores, message);
+    if (anomalies.length > 0) {
+      const severe = anomalies.filter((a) => a.severity > 0.7);
+      if (severe.length > 0) {
+        console.warn(
+          `[maip-node] Behavioral anomaly detected from ${message.from}: ` +
+            severe.map((a) => a.description).join("; ")
+        );
+      }
     }
 
     // Rate limiting

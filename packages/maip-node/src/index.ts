@@ -51,5 +51,12 @@ export {
 } from "./relay.js";
 
 // Stores
-export { NodeStores, type RegistrationEntry } from "./stores/index.js";
+export {
+  NodeStores,
+  type RegistrationEntry,
+  type GuardianReputationEntry,
+  type IsolationRecordEntry,
+  type IsolationAppealEntry,
+  type BehaviorProfileEntry,
+} from "./stores/index.js";
 export { JsonStore } from "./stores/json-store.js";

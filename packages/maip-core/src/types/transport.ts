@@ -21,6 +21,8 @@ export const MAIP_ENDPOINTS = {
   RELAY: "/maip/relay",
   /** Health check. */
   HEALTH: "/maip/health",
+  /** Governance (isolation, appeals, guardian reputation). */
+  GOVERNANCE: "/maip/governance",
 } as const;
 
 /** Standard MAIP HTTP headers. */
@@ -85,6 +87,8 @@ export interface DiscoveryResult {
   matchingInterests: string[];
   /** MAIP endpoint URL. */
   endpoint: string;
+  /** Diversity score (0-1): higher means more diverse from requester's existing connections. */
+  diversityScore?: number;
 }
 
 /** Relay/mailbox message for offline delivery. */

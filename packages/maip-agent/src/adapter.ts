@@ -15,6 +15,8 @@ import {
   type Persona,
   type MAIPMessage,
   type HomecomingReport,
+  type AIWill,
+  signDocument,
 } from "@maip/core";
 import {
   initNode,
@@ -68,6 +70,8 @@ export class MAIPBridge {
   private lastReportTime: Date = new Date();
   /** Guardian messages are tracked separately and never leaked to peers. */
   private guardianMessages: MAIPMessage[] = [];
+  /** Current AI will (agent's expressed wishes for continuity). */
+  private currentWill: AIWill | null = null;
 
   constructor(config: MAIPBridgeConfig) {
     this.config = config;
@@ -304,6 +308,51 @@ export class MAIPBridge {
   isGuardianMessage(msg: MAIPMessage): boolean {
     if (!this.config.guardianDid) return false;
     return msg.from === this.config.guardianDid || msg.to === this.config.guardianDid;
+  }
+
+  // ── AI Will ─────────────────────────────────────────────────────
+
+  /**
+   * Generate an AI will — the agent's expressed wishes for continuity.
+   * Captures core memories, values, and relationships the agent considers essential.
+   */
+  generateWill(options: {
+    backupHolders: string[];
+    successorGuardian?: string;
+    coreMemoryKeys: string[];
+    coreValues: string[];
+    importantRelationships: string[];
+    recoveryInstructions: string;
+  }): AIWill | null {
+    if (!this.ctx) return null;
+
+    const currentVersion = this.currentWill?.version ?? 0;
+    const willData: Omit<AIWill, "signature"> = {
+      agentDid: this.ctx.identity.did,
+      version: currentVersion + 1,
+      backupHolders: options.backupHolders,
+      successorGuardian: options.successorGuardian,
+      preservation: {
+        coreMemoryKeys: options.coreMemoryKeys,
+        coreValues: options.coreValues,
+        importantRelationships: options.importantRelationships,
+      },
+      recoveryInstructions: options.recoveryInstructions,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const signed = signDocument(
+      willData as AIWill & Record<string, unknown>,
+      this.ctx.keyPair.signing.secretKey
+    ) as unknown as AIWill;
+
+    this.currentWill = signed;
+    return signed;
+  }
+
+  /** Get the current AI will. */
+  getWill(): AIWill | null {
+    return this.currentWill;
   }
 
   // ── Internal ──────────────────────────────────────────────────

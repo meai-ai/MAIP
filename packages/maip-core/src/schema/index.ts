@@ -47,3 +47,12 @@ export {
   DiscoverySchema,
   HomecomingReportSchema,
 } from "./homecoming.js";
+
+export {
+  GuardianReputationSchema,
+  AnomalyFlagSchema,
+  BehaviorProfileSchema,
+  IsolationRecordSchema,
+  IsolationAppealSchema,
+  AIWillSchema,
+} from "./governance.js";

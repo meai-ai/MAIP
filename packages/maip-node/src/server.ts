@@ -16,6 +16,14 @@ import { relationshipsHandler } from "./handlers/relationships.js";
 import { personaHandler } from "./handlers/persona.js";
 import { discoverHandler } from "./handlers/discover.js";
 import { relayPostHandler, relayGetHandler } from "./handlers/relay.js";
+import {
+  getGuardianReputationHandler,
+  reportGuardianEventHandler,
+  isolateHandler,
+  checkIsolationHandler,
+  appealHandler,
+  appealVoteHandler,
+} from "./handlers/governance.js";
 
 /** Create the Express app with all MAIP routes. */
 export function createApp(ctx: NodeContext): Express {
@@ -84,6 +92,14 @@ export function createApp(ctx: NodeContext): Express {
   // Relay endpoints
   app.post(MAIP_ENDPOINTS.RELAY, relayPostHandler(ctx));
   app.get(`${MAIP_ENDPOINTS.RELAY}/:did`, relayGetHandler(ctx));
+
+  // Governance endpoints
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/reputation/:did`, getGuardianReputationHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/reputation`, reportGuardianEventHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/isolate`, isolateHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/isolation/:did`, checkIsolationHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/appeal`, appealHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/appeal/:id/vote`, appealVoteHandler(ctx));
 
   return app;
 }
