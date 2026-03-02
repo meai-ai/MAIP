@@ -14,11 +14,16 @@ export const startCommand = new Command("start")
   .option("--auto-accept", "Auto-accept relationship requests")
   .option("--registry <url>", "Registry URL to register with")
   .option("--interests <list>", "Comma-separated interests")
+  .option("--transport <mode>", "Transport mode: http, p2p, or hybrid", "http")
+  .option("--p2p-port <port>", "TCP port for libp2p", "0")
+  .option("--bootstrap <addrs>", "Comma-separated bootstrap peer multiaddrs")
   .action((opts) => {
     const dataDir = resolveDataDir(opts.data);
     const port = parseInt(opts.port, 10);
     const publicUrl = opts.url ?? `http://localhost:${port}`;
     const interests = opts.interests ? opts.interests.split(",").map((s: string) => s.trim()) : [];
+    const transportMode = opts.transport as "http" | "p2p" | "hybrid";
+    const bootstrapPeers = opts.bootstrap ? opts.bootstrap.split(",").map((s: string) => s.trim()) : [];
 
     const ctx = initNode(
       {
@@ -28,6 +33,11 @@ export const startCommand = new Command("start")
         autoAcceptRelationships: opts.autoAccept ?? false,
         registryUrls: opts.registry ? [opts.registry] : [],
         interests,
+        transportMode,
+        p2p: (transportMode === "p2p" || transportMode === "hybrid") ? {
+          tcpPort: parseInt(opts.p2pPort, 10),
+          bootstrapPeers: bootstrapPeers.length > 0 ? bootstrapPeers : undefined,
+        } : undefined,
       },
       {
         displayName: "MAIP Agent", // Will be overridden by loaded identity

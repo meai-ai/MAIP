@@ -27,6 +27,8 @@ import {
   sendRelationshipRequest,
   type NodeConfig,
   type NodeContext,
+  type TransportMode,
+  type P2PConfig,
 } from "@maip/node";
 import { MAIPChannel } from "./channel.js";
 import { exportPersona, type MeAIMemorySnapshot, type PersonaExportOptions } from "./persona-sync.js";
@@ -55,6 +57,10 @@ export interface MAIPBridgeConfig {
   autoAcceptRelationships?: boolean;
   /** Homecoming report interval in milliseconds (default: 4 hours). */
   homecomingIntervalMs?: number;
+  /** Transport mode: "http" (default), "p2p", or "hybrid". */
+  transportMode?: TransportMode;
+  /** P2P transport configuration. */
+  p2p?: P2PConfig;
 }
 
 /**
@@ -86,6 +92,8 @@ export class MAIPBridge {
       autoAcceptRelationships: this.config.autoAcceptRelationships ?? true,
       registryUrls: this.config.registryUrls,
       interests: this.config.interests,
+      transportMode: this.config.transportMode,
+      p2p: this.config.p2p,
     };
 
     this.ctx = initNode(nodeConfig, {

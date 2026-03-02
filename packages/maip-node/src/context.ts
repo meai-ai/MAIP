@@ -12,6 +12,23 @@ import type {
 } from "@maip/core";
 import type { NodeStores } from "./stores/index.js";
 
+/** Transport mode: HTTP only, P2P only, or both. */
+export type TransportMode = "http" | "p2p" | "hybrid";
+
+/** P2P-specific configuration. */
+export interface P2PConfig {
+  /** TCP port for libp2p (0 for random). */
+  tcpPort?: number;
+  /** WebSocket port for libp2p (0 for random). */
+  wsPort?: number;
+  /** Whether to run DHT in server mode. */
+  dhtServerMode?: boolean;
+  /** Whether to enable circuit relay server. */
+  enableRelayServer?: boolean;
+  /** Bootstrap peer multiaddrs. */
+  bootstrapPeers?: string[];
+}
+
 /** Node configuration. */
 export interface NodeConfig {
   /** HTTP port to listen on. */
@@ -26,6 +43,10 @@ export interface NodeConfig {
   registryUrls?: string[];
   /** Interests to register with discovery (for agents). */
   interests?: string[];
+  /** Transport mode: "http" (default), "p2p", or "hybrid". */
+  transportMode?: TransportMode;
+  /** P2P transport configuration (required when transportMode includes p2p). */
+  p2p?: P2PConfig;
 }
 
 /** Runtime context shared across all handlers. */

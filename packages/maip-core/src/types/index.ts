@@ -61,6 +61,11 @@ export type {
 } from "./transport.js";
 
 export type {
+  TransportResult,
+  PeerAddress,
+} from "./transport-interface.js";
+
+export type {
   GuardianReputation,
   BehaviorProfile,
   AnomalyFlag,

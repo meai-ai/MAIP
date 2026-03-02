@@ -29,6 +29,8 @@ export interface Endpoints {
   maip: string;
   /** Optional WebSocket endpoint for real-time communication. */
   websocket?: string;
+  /** Optional libp2p multiaddr for P2P transport. */
+  p2p?: string;
 }
 
 /** Capabilities this entity supports. */

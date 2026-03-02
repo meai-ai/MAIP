@@ -334,6 +334,6 @@ describe("MAIPChannel", () => {
     const channel = new MAIPChannel(mockCtx, keyPair);
     channel.registerPeer("did:maip:peer1", "http://localhost:3001");
 
-    expect(channel["peerEndpoints"].get("did:maip:peer1")).toBe("http://localhost:3001");
+    expect(channel["peerEndpoints"].get("did:maip:peer1")).toEqual({ endpoint: "http://localhost:3001", peerId: undefined });
   });
 });

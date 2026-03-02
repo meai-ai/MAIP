@@ -89,6 +89,10 @@ export interface DiscoveryResult {
   endpoint: string;
   /** Diversity score (0-1): higher means more diverse from requester's existing connections. */
   diversityScore?: number;
+  /** libp2p PeerId (when discovered via DHT). */
+  peerId?: string;
+  /** libp2p multiaddrs (when discovered via DHT). */
+  multiaddrs?: string[];
 }
 
 /** Relay/mailbox message for offline delivery. */

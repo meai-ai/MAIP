@@ -26,7 +26,7 @@ export { createApp, startServer } from "./server.js";
 export { initNode, updateIdentity, type InitOptions } from "./init.js";
 
 // Context
-export type { NodeConfig, NodeContext } from "./context.js";
+export type { NodeConfig, NodeContext, TransportMode, P2PConfig } from "./context.js";
 
 // Client
 export {
@@ -49,6 +49,14 @@ export {
   storeRelayMessage,
   retrieveRelayMessages,
 } from "./relay.js";
+
+// Handler cores (transport-agnostic)
+export { processIncomingMessage } from "./handlers/messages-core.js";
+export { processRelationshipRequest } from "./handlers/relationships-core.js";
+export { processPersonaRequest } from "./handlers/persona-core.js";
+export { processIdentityRequest } from "./handlers/identity-core.js";
+export { processDiscoveryQuery, computeDiversityScore } from "./handlers/discover-core.js";
+export { processRelayStore, processRelayRetrieve } from "./handlers/relay-core.js";
 
 // Stores
 export {

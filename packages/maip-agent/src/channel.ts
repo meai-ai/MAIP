@@ -28,8 +28,8 @@ export class MAIPChannel {
   private ctx: NodeContext;
   private keyPair: MAIPKeyPair;
 
-  /** Map of DID → endpoint URL for reply routing. */
-  private peerEndpoints = new Map<string, string>();
+  /** Map of DID → peer address for reply routing. */
+  private peerEndpoints = new Map<string, { endpoint: string; peerId?: string }>();
 
   constructor(ctx: NodeContext, keyPair: MAIPKeyPair) {
     this.ctx = ctx;
@@ -52,8 +52,8 @@ export class MAIPChannel {
   }
 
   /** Register a peer endpoint for reply routing. */
-  registerPeer(did: string, endpoint: string): void {
-    this.peerEndpoints.set(did, endpoint);
+  registerPeer(did: string, endpoint: string, peerId?: string): void {
+    this.peerEndpoints.set(did, { endpoint, peerId });
   }
 
   async sendMessage(text: string): Promise<{ messageId: number | string }> {
@@ -77,10 +77,10 @@ export class MAIPChannel {
 
     // Build reply function — sends back via MAIP
     const sendReply = async (replyText: string) => {
-      const endpoint = this.peerEndpoints.get(msg.from);
-      if (endpoint) {
+      const peerAddr = this.peerEndpoints.get(msg.from);
+      if (peerAddr) {
         const ack = await sendMessage(
-          endpoint,
+          peerAddr.endpoint,
           this.ctx.identity.did,
           msg.from,
           replyText,

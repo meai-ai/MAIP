@@ -8,7 +8,7 @@ import { resolveDataDir, loadKeyPair, loadIdentity } from "../utils.js";
 
 export const connectCommand = new Command("connect")
   .description("Connect to a remote MAIP node")
-  .argument("<endpoint>", "Remote node's MAIP endpoint URL")
+  .argument("<endpoint>", "Remote node's MAIP endpoint URL, DID, or multiaddr")
   .option("-d, --data <dir>", "Data directory", "./maip-data")
   .option("-t, --type <type>", "Relationship type (peer, mentor_student, collaborator)", "peer")
   .option("-m, --message <msg>", "Introduction message", "Hello! I'd like to connect.")

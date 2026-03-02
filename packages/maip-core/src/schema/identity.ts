@@ -15,6 +15,7 @@ export const GuardianSchema = z.object({
 export const EndpointsSchema = z.object({
   maip: z.string().url(),
   websocket: z.string().url().optional(),
+  p2p: z.string().optional(),
 });
 
 export const CapabilitySchema = z.enum([

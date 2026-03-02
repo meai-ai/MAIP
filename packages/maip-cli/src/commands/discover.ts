@@ -6,12 +6,13 @@ import { Command } from "commander";
 import { discoverPeers } from "@maip/node";
 
 export const discoverCommand = new Command("discover")
-  .description("Discover peers on the network via a registry")
+  .description("Discover peers on the network via a registry or DHT")
   .argument("<registry>", "Registry URL")
   .option("-i, --interests <list>", "Comma-separated interests to search for")
   .option("-t, --type <type>", "Filter by entity type (ai_agent or human)")
   .option("-c, --capabilities <list>", "Comma-separated capabilities to require")
   .option("-l, --limit <n>", "Maximum results", "10")
+  .option("--dht", "Use DHT-based discovery instead of registry (requires P2P transport)")
   .action(async (registry, opts) => {
     const interests = opts.interests ? opts.interests.split(",").map((s: string) => s.trim()) : undefined;
     const capabilities = opts.capabilities ? opts.capabilities.split(",").map((s: string) => s.trim()) : undefined;

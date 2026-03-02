@@ -104,22 +104,40 @@ export function createApp(ctx: NodeContext): Express {
   return app;
 }
 
-/** Start the MAIP node server. Returns a close function. */
+/**
+ * Start the MAIP node server.
+ *
+ * When transportMode is "http" (default), starts only the Express server.
+ * When "p2p", starts only the libp2p node.
+ * When "hybrid", starts both.
+ */
 export function startServer(
   ctx: NodeContext
 ): { app: Express; close: () => void } {
+  const transportMode = ctx.config.transportMode ?? "http";
   const app = createApp(ctx);
 
-  const server = app.listen(ctx.config.port, () => {
-    console.log(`[maip-node] MAIP node running on port ${ctx.config.port}`);
-    console.log(`[maip-node] DID: ${ctx.identity.did}`);
-    console.log(`[maip-node] Endpoint: ${ctx.config.publicUrl}`);
-  });
+  let httpServer: ReturnType<Express["listen"]> | null = null;
+
+  // Start HTTP transport
+  if (transportMode === "http" || transportMode === "hybrid") {
+    httpServer = app.listen(ctx.config.port, () => {
+      console.log(`[maip-node] MAIP HTTP server running on port ${ctx.config.port}`);
+      console.log(`[maip-node] DID: ${ctx.identity.did}`);
+      console.log(`[maip-node] Endpoint: ${ctx.config.publicUrl}`);
+    });
+  }
+
+  // P2P transport is started separately via startP2PServer() from @maip/transport-p2p
+  // to keep libp2p deps optional. See packages/maip-transport-p2p/src/p2p-handlers.ts.
+  if (transportMode === "p2p" || transportMode === "hybrid") {
+    console.log(`[maip-node] P2P transport enabled — call registerP2PHandlers() to start`);
+  }
 
   return {
     app,
     close: () => {
-      server.close();
+      if (httpServer) httpServer.close();
     },
   };
 }

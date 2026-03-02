@@ -67,6 +67,17 @@ export function initNode(
     keyPair = generateKeyPair();
 
     const now = new Date().toISOString();
+    const transportMode = config.transportMode ?? "http";
+    const endpoints: { maip: string; p2p?: string } = {
+      maip: config.publicUrl,
+    };
+    // P2P endpoint is populated later in server.ts once libp2p starts and
+    // we know the actual multiaddr. For now, set a placeholder if in p2p/hybrid mode.
+    if (transportMode === "p2p" || transportMode === "hybrid") {
+      const tcpPort = config.p2p?.tcpPort ?? 0;
+      endpoints.p2p = `/ip4/0.0.0.0/tcp/${tcpPort}`;
+    }
+
     const identityData: Omit<IdentityDocument, "signature"> = {
       version: MAIP_VERSION,
       did: keyPair.did,
@@ -76,9 +87,7 @@ export function initNode(
       displayName: options.displayName,
       description: options.description,
       capabilities: options.capabilities ?? ["messaging", "persona_sharing", "knowledge_exchange"],
-      endpoints: {
-        maip: config.publicUrl,
-      },
+      endpoints,
       instanceNonce: crypto.randomUUID(),
       created: now,
       updated: now,
