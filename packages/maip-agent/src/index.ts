@@ -37,6 +37,7 @@ export {
 } from "./homecoming.js";
 export type {
   MeAIMemory,
+  MeAIMemoryPrivacy,
   MeAIMemoryCategory,
   MeAIEmotionalState,
   MeAIHeartbeatAction,

@@ -24,6 +24,8 @@ export interface RegistrationEntry {
   interests: string[];
   capabilities: string[];
   endpoint: string;
+  /** Instance nonce for unique-active-instance detection. */
+  instanceNonce?: string;
   registeredAt: string;
   lastSeen: string;
 }

@@ -21,7 +21,7 @@ import type { MeAIEmotionalState, MeAIHeartbeatAction } from "./meai-types.js";
 
 /** Raw data collected during a reporting period. */
 export interface ReportingPeriodData {
-  /** Messages exchanged during this period. */
+  /** Peer messages exchanged during this period (excludes guardian conversations). */
   messages: MAIPMessage[];
   /** Heartbeat actions taken. */
   heartbeatActions: Array<{ action: MeAIHeartbeatAction; timestamp: number; detail?: string }>;

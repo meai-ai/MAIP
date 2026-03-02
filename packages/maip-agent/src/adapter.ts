@@ -66,6 +66,8 @@ export class MAIPBridge {
   private homecomingTimer: ReturnType<typeof setInterval> | null = null;
   private reportingData: ReportingPeriodData = emptyReportingData();
   private lastReportTime: Date = new Date();
+  /** Guardian messages are tracked separately and never leaked to peers. */
+  private guardianMessages: MAIPMessage[] = [];
 
   constructor(config: MAIPBridgeConfig) {
     this.config = config;
@@ -91,12 +93,19 @@ export class MAIPBridge {
       capabilities: ["messaging", "persona_sharing", "knowledge_exchange"],
     });
 
-    // Track incoming messages for homecoming reports
+    // Track incoming messages — guardian conversations are isolated
     this.ctx.onMessage = (msg: MAIPMessage) => {
-      this.reportingData.messages.push(msg);
+      if (this.isGuardianMessage(msg)) {
+        // Guardian messages are stored separately and never included
+        // in homecoming reports or shared with peers
+        this.guardianMessages.push(msg);
+      } else {
+        // Peer messages are tracked for homecoming reports
+        this.reportingData.messages.push(msg);
+      }
       if (this.channel) {
-        // Forward to channel handler (which calls MeAI's agent loop)
-        this.ctx!.onMessage?.(msg);
+        // Forward all messages to channel handler (which calls MeAI's agent loop)
+        this.channel["handleIncomingMessage"](msg);
       }
     };
 
@@ -271,7 +280,7 @@ export class MAIPBridge {
     );
 
     if (ack) {
-      this.reportingData.messages.push({
+      const outMsg: MAIPMessage = {
         id: ack.messageId,
         type: "conversation",
         from: this.ctx.identity.did,
@@ -279,10 +288,22 @@ export class MAIPBridge {
         timestamp: new Date().toISOString(),
         content: { text, provenance: "autonomous_exploration" },
         signature: "",
-      });
+      };
+      // Guardian messages are stored separately (conversation isolation)
+      if (this.isGuardianMessage(outMsg)) {
+        this.guardianMessages.push(outMsg);
+      } else {
+        this.reportingData.messages.push(outMsg);
+      }
     }
 
     return ack !== null;
+  }
+
+  /** Check if a message is from/to the guardian (for conversation isolation). */
+  isGuardianMessage(msg: MAIPMessage): boolean {
+    if (!this.config.guardianDid) return false;
+    return msg.from === this.config.guardianDid || msg.to === this.config.guardianDid;
   }
 
   // ── Internal ──────────────────────────────────────────────────

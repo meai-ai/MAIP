@@ -11,6 +11,7 @@ export {
 } from "./identity.js";
 
 export {
+  MemoryVisibilitySchema,
   ThinkingTraceSchema,
   EpisodicMemorySchema,
   SemanticMemorySchema,

@@ -78,16 +78,16 @@ export function personaHandler(ctx: NodeContext) {
     const persona = { ...ctx.persona };
     const overrides = policy.sectionOverrides;
 
-    if (overrides) {
-      const isConnection = senderDid
-        ? ctx.stores.relationships.filter(
-            (r) =>
-              r.status === "active" &&
-              r.participants.includes(senderDid) &&
-              r.participants.includes(ctx.identity.did)
-          ).length > 0
-        : false;
+    const isConnection = senderDid
+      ? ctx.stores.relationships.filter(
+          (r) =>
+            r.status === "active" &&
+            r.participants.includes(senderDid) &&
+            r.participants.includes(ctx.identity.did)
+        ).length > 0
+      : false;
 
+    if (overrides) {
       if (overrides.memories === "private" || (overrides.memories === "connections_only" && !isConnection)) {
         persona.memories = { episodic: [], semantic: [], relational: [] };
       }
@@ -102,6 +102,24 @@ export function personaHandler(ctx: NodeContext) {
           arousal: 0,
         };
       }
+    }
+
+    // Filter individual memories by their per-memory visibility level.
+    // "confidential" and "private" are never shared.
+    // "network" requires an active connection.
+    // "public" is always shared.
+    if (persona.memories) {
+      const memFilter = (vis: string | undefined) => {
+        if (!vis || vis === "public") return true;
+        if (vis === "network") return isConnection;
+        return false; // "private" and "confidential" never shared
+      };
+
+      persona.memories = {
+        episodic: persona.memories.episodic.filter((m) => memFilter(m.visibility)),
+        semantic: persona.memories.semantic.filter((m) => memFilter(m.visibility)),
+        relational: persona.memories.relational.filter((m) => memFilter(m.visibility)),
+      };
     }
 
     res.json({ ok: true, data: persona });

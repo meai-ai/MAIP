@@ -38,6 +38,8 @@ export const IdentityDocumentSchema = z.object({
   capabilities: z.array(CapabilitySchema),
   endpoints: EndpointsSchema,
   autonomyLevel: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]).optional(),
+  instanceNonce: z.string().optional(),
+  forkedFrom: z.string().optional(),
   created: z.string().datetime(),
   updated: z.string().datetime(),
   signature: z.string().min(1),

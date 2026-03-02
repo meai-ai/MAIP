@@ -43,6 +43,10 @@ export interface MessageContent {
   provenance: ContentProvenance;
   /** Optional thinking trace — shows the agent's reasoning. */
   thinkingTrace?: string;
+  /** Confidence in the information (0-1). Required for knowledge_share messages. */
+  confidence?: number;
+  /** Chain of DIDs tracing how this knowledge propagated. */
+  sourceChain?: string[];
 }
 
 /**

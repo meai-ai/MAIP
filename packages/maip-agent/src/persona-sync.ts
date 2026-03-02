@@ -24,6 +24,7 @@ import {
   type ThinkingTrace,
   type EmotionalSnapshot,
   type SharingPolicy,
+  type MemoryVisibility,
 } from "@maip/core";
 import type {
   MeAIMemory,
@@ -81,25 +82,28 @@ export function exportPersona(
   const values = extractValues(memories.core);
   const communicationStyle = character.persona.compact ?? "Warm and thoughtful";
 
+  // ── Filter out confidential memories (never included in persona export) ──
+  const filterExportable = (m: MeAIMemory) => m.privacy !== "confidential";
+
   // ── Episodic memories (from emotional + character categories) ──
   const episodic = [
-    ...memories.emotional.map(memoryToEpisodic),
-    ...memories.character.map(memoryToEpisodic),
+    ...memories.emotional.filter(filterExportable).map(memoryToEpisodic),
+    ...memories.character.filter(filterExportable).map(memoryToEpisodic),
   ]
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
     .slice(0, maxEpisodic);
 
   // ── Semantic memories (from core + knowledge categories) ──
   const semantic = [
-    ...memories.core.map(memoryToSemantic),
-    ...memories.knowledge.map(memoryToSemantic),
+    ...memories.core.filter(filterExportable).map(memoryToSemantic),
+    ...memories.knowledge.filter(filterExportable).map(memoryToSemantic),
   ]
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, maxSemantic);
 
   // ── Relational memories (from core memories with relationship prefixes) ──
   const relational = memories.core
-    .filter((m) => m.key.startsWith("user.") || m.key.startsWith("family."))
+    .filter((m) => (m.key.startsWith("user.") || m.key.startsWith("family.")) && filterExportable(m))
     .map(memoryToRelational)
     .slice(0, maxRelational);
 
@@ -154,6 +158,17 @@ export function exportPersona(
 
 // ── Converters ──────────────────────────────────────────────────
 
+function meaiPrivacyToVisibility(m: MeAIMemory): MemoryVisibility {
+  if (m.privacy) return m.privacy;
+  // Default privacy based on key prefix
+  const prefix = m.key.split(".")[0];
+  const privateKeys = new Set(["healthcare", "family", "inner"]);
+  if (privateKeys.has(prefix)) return "private";
+  const publicKeys = new Set(["interests", "knowledge"]);
+  if (publicKeys.has(prefix)) return "public";
+  return "network";
+}
+
 function memoryToEpisodic(m: MeAIMemory): EpisodicMemory {
   return {
     id: uuid(),
@@ -162,6 +177,7 @@ function memoryToEpisodic(m: MeAIMemory): EpisodicMemory {
     timestamp: new Date(m.timestamp).toISOString(),
     significance: m.confidence,
     sourceCategory: categorize(m.key),
+    visibility: meaiPrivacyToVisibility(m),
   };
 }
 
@@ -173,6 +189,7 @@ function memoryToSemantic(m: MeAIMemory): SemanticMemory {
     confidence: m.confidence,
     learned: new Date(m.timestamp).toISOString(),
     sourceCategory: categorize(m.key),
+    visibility: meaiPrivacyToVisibility(m),
   };
 }
 
@@ -184,6 +201,7 @@ function memoryToRelational(m: MeAIMemory): RelationalMemory {
     sharedExperiences: [m.value],
     trustLevel: m.confidence,
     lastInteraction: new Date(m.timestamp).toISOString(),
+    visibility: meaiPrivacyToVisibility(m),
   };
 }
 

@@ -26,5 +26,8 @@ export const ContentItemSchema = z.object({
   updated: z.string().datetime(),
   visibility: z.enum(["public", "connections_only", "private"]),
   thinkingTrace: z.string().optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  contentHash: z.string().optional(),
+  sourceChain: z.array(z.string()).optional(),
   signature: z.string().min(1),
 });

@@ -42,6 +42,12 @@ export interface ContentItem {
   visibility: "public" | "connections_only" | "private";
   /** Optional thinking trace — how the content was derived. */
   thinkingTrace?: string;
+  /** Confidence in the information (0-1). */
+  confidence?: number;
+  /** SHA-256 hash of the original body for tracking through transmission chains. */
+  contentHash?: string;
+  /** Chain of DIDs tracing how this content propagated from its origin. */
+  sourceChain?: string[];
   /** Ed25519 signature (base64). */
   signature: string;
 }

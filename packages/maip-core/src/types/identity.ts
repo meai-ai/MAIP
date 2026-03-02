@@ -69,6 +69,18 @@ export interface IdentityDocument {
   endpoints: Endpoints;
   /** Autonomy level (0-3, only for ai_agent). */
   autonomyLevel?: AutonomyLevel;
+  /**
+   * Instance nonce — random value regenerated each time the node starts.
+   * Ensures only one active instance per DID at any time.
+   * Registry nodes use this to detect duplicate instances.
+   */
+  instanceNonce?: string;
+  /**
+   * Parent DID — set when this identity was forked from another.
+   * Forking creates a new DID (new keypair) that inherits some memories
+   * from the parent, but is an independent entity from birth.
+   */
+  forkedFrom?: string;
   /** ISO 8601 creation date. */
   created: string;
   /** ISO 8601 last update date. */

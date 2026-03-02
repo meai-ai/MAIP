@@ -9,7 +9,20 @@
  * The format is a superset that can represent both the MAIP conceptual model
  * (episodic/semantic/relational) and MeAI's category-based memory system
  * (core/emotional/knowledge/character/insights/system).
+ *
+ * Each memory carries a privacy level (MemoryVisibility) controlling what
+ * can be shared during agent-to-agent interactions:
+ *   public       — freely shareable
+ *   network      — shareable with trusted connections
+ *   private      — never shared externally
+ *   confidential — isolated even from the agent's own social reasoning
  */
+
+/**
+ * Privacy level for individual memories.
+ * Controls what the agent can share during social interactions.
+ */
+export type MemoryVisibility = "public" | "network" | "private" | "confidential";
 
 /** A thinking trace — capturing the reasoning process behind a conclusion. */
 export interface ThinkingTrace {
@@ -41,6 +54,8 @@ export interface EpisodicMemory {
   significance: number;
   /** Optional source category for MeAI mapping (e.g., "emotional", "character"). */
   sourceCategory?: string;
+  /** Privacy level — controls sharing during agent social interactions. */
+  visibility?: MemoryVisibility;
 }
 
 /** A semantic memory — a fact or piece of knowledge. */
@@ -57,6 +72,10 @@ export interface SemanticMemory {
   learned: string;
   /** Optional source category for MeAI mapping (e.g., "core", "knowledge"). */
   sourceCategory?: string;
+  /** Privacy level — controls sharing during agent social interactions. */
+  visibility?: MemoryVisibility;
+  /** Chain of DIDs tracing where this knowledge originated. */
+  sourceChain?: string[];
 }
 
 /** A relational memory — knowledge about a relationship with another entity. */
@@ -73,6 +92,8 @@ export interface RelationalMemory {
   trustLevel: number;
   /** ISO 8601 date of last interaction. */
   lastInteraction: string;
+  /** Privacy level — controls sharing during agent social interactions. */
+  visibility?: MemoryVisibility;
 }
 
 /** A growth milestone — marking development over time. */

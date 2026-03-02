@@ -6,6 +6,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import {
   generateKeyPair,
   importSecretKey,
@@ -59,6 +60,8 @@ export function initNode(
     const secretKeyBase64 = fs.readFileSync(keyPath, "utf-8").trim();
     keyPair = importSecretKey(secretKeyBase64);
     identity = JSON.parse(fs.readFileSync(identityPath, "utf-8"));
+    // Generate fresh instance nonce on each startup (unique active instance)
+    identity.instanceNonce = crypto.randomUUID();
   } else {
     // Generate new
     keyPair = generateKeyPair();
@@ -76,6 +79,7 @@ export function initNode(
       endpoints: {
         maip: config.publicUrl,
       },
+      instanceNonce: crypto.randomUUID(),
       created: now,
       updated: now,
     };

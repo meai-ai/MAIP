@@ -48,6 +48,21 @@ export function createApp(ctx: NodeContext): Express {
       return;
     }
 
+    // Unique instance detection: if same DID registers from a different
+    // endpoint with a different nonce, flag as duplicate.
+    const existing = ctx.stores.registrations.filter(
+      (r) => r.did === body.did && r.endpoint !== body.endpoint
+    );
+    if (existing.length > 0 && body.instanceNonce) {
+      const prev = existing[0];
+      if (prev.instanceNonce && prev.instanceNonce !== body.instanceNonce) {
+        console.warn(
+          `[maip-node] Duplicate instance detected for ${body.did}: ` +
+          `existing at ${existing[0].endpoint}, new at ${body.endpoint}`
+        );
+      }
+    }
+
     const now = new Date().toISOString();
     ctx.stores.registrations.add({
       id: body.did,
@@ -58,6 +73,7 @@ export function createApp(ctx: NodeContext): Express {
       interests: body.interests ?? [],
       capabilities: body.capabilities ?? [],
       endpoint: body.endpoint,
+      instanceNonce: body.instanceNonce,
       registeredAt: now,
       lastSeen: now,
     });

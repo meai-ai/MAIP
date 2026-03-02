@@ -12,6 +12,7 @@ export type {
 } from "./identity.js";
 
 export type {
+  MemoryVisibility,
   ThinkingTrace,
   EpisodicMemory,
   SemanticMemory,

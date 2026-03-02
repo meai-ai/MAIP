@@ -32,6 +32,8 @@ export const MessageContentSchema = z.object({
   data: z.record(z.unknown()).optional(),
   provenance: ContentProvenanceSchema,
   thinkingTrace: z.string().optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  sourceChain: z.array(z.string()).optional(),
 });
 
 export const MAIPMessageSchema = z.object({

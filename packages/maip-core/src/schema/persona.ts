@@ -4,6 +4,8 @@
 
 import { z } from "zod";
 
+export const MemoryVisibilitySchema = z.enum(["public", "network", "private", "confidential"]);
+
 export const ThinkingTraceSchema = z.object({
   topic: z.string(),
   reasoning: z.string(),
@@ -20,6 +22,7 @@ export const EpisodicMemorySchema = z.object({
   participants: z.array(z.string()).optional(),
   significance: z.number().min(0).max(1),
   sourceCategory: z.string().optional(),
+  visibility: MemoryVisibilitySchema.optional(),
 });
 
 export const SemanticMemorySchema = z.object({
@@ -29,6 +32,8 @@ export const SemanticMemorySchema = z.object({
   confidence: z.number().min(0).max(1),
   learned: z.string().datetime(),
   sourceCategory: z.string().optional(),
+  visibility: MemoryVisibilitySchema.optional(),
+  sourceChain: z.array(z.string()).optional(),
 });
 
 export const RelationalMemorySchema = z.object({
@@ -38,6 +43,7 @@ export const RelationalMemorySchema = z.object({
   sharedExperiences: z.array(z.string()),
   trustLevel: z.number().min(0).max(1),
   lastInteraction: z.string().datetime(),
+  visibility: MemoryVisibilitySchema.optional(),
 });
 
 export const GrowthMilestoneSchema = z.object({

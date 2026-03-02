@@ -6,12 +6,17 @@
  * MeAI engine and converts them to MAIP protocol types.
  */
 
+/** Privacy level for individual memories. */
+export type MeAIMemoryPrivacy = "public" | "network" | "private" | "confidential";
+
 /** MeAI Memory (from src/types.ts). */
 export interface MeAIMemory {
   key: string;
   value: string;
   timestamp: number;
   confidence: number;
+  /** Privacy level — controls what can be shared externally. Defaults to "network". */
+  privacy?: MeAIMemoryPrivacy;
 }
 
 /** MeAI memory categories (from src/memory/store-manager.ts). */
