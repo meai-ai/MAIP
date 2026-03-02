@@ -54,5 +54,8 @@ export {
   BehaviorProfileSchema,
   IsolationRecordSchema,
   IsolationAppealSchema,
+  GuardianTransferRequestSchema,
+  GuardianTransferConsentSchema,
+  GuardianTransferStatusSchema,
   AIWillSchema,
 } from "./governance.js";

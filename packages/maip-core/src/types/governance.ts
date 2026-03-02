@@ -114,6 +114,64 @@ export interface IsolationAppeal {
   resolvedAt: string | null;
 }
 
+// ── Guardian Transfer ─────────────────────────────────────────────
+
+/** Request to initiate a guardian transfer (spec section 9.5). */
+export interface GuardianTransferRequest {
+  /** DID of the agent being transferred. */
+  agentDid: string;
+  /** DID of the current guardian. */
+  currentGuardianDid: string;
+  /** DID of the proposed new guardian. */
+  newGuardianDid: string;
+  /** Reason for the transfer. */
+  reason: string;
+  /** Who initiated the transfer. */
+  initiatedBy: "agent" | "current_guardian" | "new_guardian";
+  /** ISO 8601 timestamp. */
+  timestamp: string;
+  /** Ed25519 signature by the initiator. */
+  signature: string;
+}
+
+/** Consent from one party in a guardian transfer. */
+export interface GuardianTransferConsent {
+  /** ID of the transfer being consented to. */
+  transferId: string;
+  /** DID of the consenting party. */
+  consentingParty: string;
+  /** Whether the party approves the transfer. */
+  approved: boolean;
+  /** ISO 8601 timestamp. */
+  timestamp: string;
+  /** Ed25519 signature by the consenting party. */
+  signature: string;
+}
+
+/** Status of a guardian transfer. */
+export interface GuardianTransferStatus {
+  /** Unique transfer ID. */
+  id: string;
+  /** DID of the agent being transferred. */
+  agentDid: string;
+  /** DID of the current guardian. */
+  currentGuardianDid: string;
+  /** DID of the proposed new guardian. */
+  newGuardianDid: string;
+  /** Reason for the transfer. */
+  reason: string;
+  /** Who initiated the transfer. */
+  initiatedBy: string;
+  /** Consent records from each party. */
+  consents: Array<{ party: string; approved: boolean; timestamp: string }>;
+  /** Current status of the transfer. */
+  status: "pending" | "approved" | "rejected" | "completed" | "expired";
+  /** ISO 8601 timestamp when the transfer was created. */
+  createdAt: string;
+  /** ISO 8601 timestamp when the transfer completed (if applicable). */
+  completedAt?: string;
+}
+
 // ── AI Will / Distributed Backup ─────────────────────────────────
 
 /** AI will — an agent's expressed wishes for continuity. */

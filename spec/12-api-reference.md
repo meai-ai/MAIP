@@ -435,7 +435,7 @@ No request body.
 
 **Response (`Persona`):**
 
-Returns a `Persona` object (see [Section 04a — Personas](04a-personas.md)). The response is filtered according to the persona's `sharingPolicy` and the requesting entity's access level.
+Returns a `Persona` object (see [Section 02 — Persona](02-persona.md)). The response is filtered according to the persona's `sharingPolicy` and the requesting entity's access level.
 
 | Field | Type | Description |
 |-------|------|-------------|

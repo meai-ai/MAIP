@@ -12,8 +12,8 @@ import type {
 } from "@maip/core";
 import type { NodeStores } from "./stores/index.js";
 
-/** Transport mode: HTTP only, P2P only, or both. */
-export type TransportMode = "http" | "p2p" | "hybrid";
+/** Transport mode: HTTP only, P2P only, both, or WebSocket-enabled. */
+export type TransportMode = "http" | "p2p" | "hybrid" | "ws";
 
 /** P2P-specific configuration. */
 export interface P2PConfig {

@@ -15,6 +15,10 @@ import type {
   IsolationRecord,
   IsolationAppeal,
   BehaviorProfile,
+  GuardianTransferStatus,
+  SharedSpace,
+  SpaceMembership,
+  SpaceMessage,
 } from "@maip/core";
 import { JsonStore } from "./json-store.js";
 
@@ -54,6 +58,26 @@ export interface BehaviorProfileEntry extends BehaviorProfile {
   id: string;
 }
 
+/** Guardian transfer record. */
+export interface GuardianTransferEntry extends GuardianTransferStatus {
+  id: string;
+}
+
+/** Shared Space record. */
+export interface SharedSpaceEntry extends SharedSpace {
+  id: string;
+}
+
+/** Space membership record. */
+export interface SpaceMembershipEntry extends SpaceMembership {
+  id: string;
+}
+
+/** Space message record. */
+export interface SpaceMessageEntry extends SpaceMessage {
+  id: string;
+}
+
 export class NodeStores {
   readonly messages: JsonStore<MAIPMessage & { id: string }>;
   readonly relationships: JsonStore<Relationship>;
@@ -63,6 +87,10 @@ export class NodeStores {
   readonly isolations: JsonStore<IsolationRecordEntry>;
   readonly appeals: JsonStore<IsolationAppealEntry>;
   readonly behaviorProfiles: JsonStore<BehaviorProfileEntry>;
+  readonly guardianTransfers: JsonStore<GuardianTransferEntry>;
+  readonly spaces: JsonStore<SharedSpaceEntry>;
+  readonly spaceMembers: JsonStore<SpaceMembershipEntry>;
+  readonly spaceMessages: JsonStore<SpaceMessageEntry>;
 
   constructor(dataDir: string) {
     if (!fs.existsSync(dataDir)) {
@@ -76,6 +104,10 @@ export class NodeStores {
     this.isolations = new JsonStore(dataDir, "isolations.json");
     this.appeals = new JsonStore(dataDir, "appeals.json");
     this.behaviorProfiles = new JsonStore(dataDir, "behavior-profiles.json");
+    this.guardianTransfers = new JsonStore(dataDir, "guardian-transfers.json");
+    this.spaces = new JsonStore(dataDir, "spaces.json");
+    this.spaceMembers = new JsonStore(dataDir, "space-members.json");
+    this.spaceMessages = new JsonStore(dataDir, "space-messages.json");
   }
 
   /** Purge expired relay messages. */

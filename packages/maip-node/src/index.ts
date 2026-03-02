@@ -34,6 +34,19 @@ export {
   sendRelationshipRequest,
   fetchPersona,
   fetchIdentity,
+  fetchGuardianReputation,
+  reportGuardianEvent,
+  isolateDid,
+  checkIsolation,
+  submitAppeal,
+  voteOnAppeal,
+  initiateGuardianTransfer,
+  submitTransferConsent,
+  getTransferStatus,
+  createSpace,
+  joinSpace,
+  postToSpace,
+  getSpaceMessages,
   type SendMessageOptions,
 } from "./client.js";
 
@@ -57,6 +70,17 @@ export { processPersonaRequest } from "./handlers/persona-core.js";
 export { processIdentityRequest } from "./handlers/identity-core.js";
 export { processDiscoveryQuery, computeDiversityScore } from "./handlers/discover-core.js";
 export { processRelayStore, processRelayRetrieve } from "./handlers/relay-core.js";
+export {
+  processInitiateTransfer,
+  processTransferConsent,
+  processGetTransferStatus,
+} from "./handlers/guardian-transfer-core.js";
+export {
+  processCreateSpace,
+  processJoinSpace,
+  processPostToSpace,
+  processGetSpaceMessages,
+} from "./handlers/spaces-core.js";
 
 // Stores
 export {
@@ -66,5 +90,9 @@ export {
   type IsolationRecordEntry,
   type IsolationAppealEntry,
   type BehaviorProfileEntry,
+  type GuardianTransferEntry,
+  type SharedSpaceEntry,
+  type SpaceMembershipEntry,
+  type SpaceMessageEntry,
 } from "./stores/index.js";
 export { JsonStore } from "./stores/json-store.js";

@@ -24,6 +24,17 @@ import {
   appealHandler,
   appealVoteHandler,
 } from "./handlers/governance.js";
+import {
+  initiateTransferHandler,
+  transferConsentHandler,
+  getTransferStatusHandler,
+} from "./handlers/guardian-transfer.js";
+import {
+  createSpaceHandler,
+  joinSpaceHandler,
+  postToSpaceHandler,
+  getSpaceMessagesHandler,
+} from "./handlers/spaces.js";
 
 /** Create the Express app with all MAIP routes. */
 export function createApp(ctx: NodeContext): Express {
@@ -100,6 +111,17 @@ export function createApp(ctx: NodeContext): Express {
   app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/isolation/:did`, checkIsolationHandler(ctx));
   app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/appeal`, appealHandler(ctx));
   app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/appeal/:id/vote`, appealVoteHandler(ctx));
+
+  // Guardian transfer endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/transfer`, initiateTransferHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/transfer/:id/consent`, transferConsentHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/transfer/:id`, getTransferStatusHandler(ctx));
+
+  // Shared Spaces endpoints (v0.2+)
+  app.post("/maip/spaces", createSpaceHandler(ctx));
+  app.post("/maip/spaces/:id/join", joinSpaceHandler(ctx));
+  app.post("/maip/spaces/:id/messages", postToSpaceHandler(ctx));
+  app.get("/maip/spaces/:id/messages", getSpaceMessagesHandler(ctx));
 
   return app;
 }

@@ -47,6 +47,21 @@ async function handleStream<Req, Res>(
 }
 
 /**
+ * Start a P2P node, register all MAIP protocol handlers, and update the
+ * node context with the real listening multiaddr.
+ */
+export async function startP2PNode(node: Libp2p, ctx: NodeContext): Promise<void> {
+  registerP2PHandlers(node, ctx);
+  await node.start();
+
+  // Update identity endpoints with real multiaddr (replaces placeholder)
+  const addrs = node.getMultiaddrs();
+  if (addrs.length > 0) {
+    ctx.identity.endpoints.p2p = addrs[0].toString();
+  }
+}
+
+/**
  * Register all MAIP protocol handlers on a libp2p node.
  *
  * In libp2p v3, node.handle() takes (stream, connection) as positional args.

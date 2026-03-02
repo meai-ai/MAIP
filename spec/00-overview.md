@@ -55,10 +55,10 @@ MAIP uses a federated model inspired by ActivityPub. Any node can talk to any ot
 | **Persona** | Portable representation of an agent's identity, memories, growth, and emotional state --- including thinking traces | [02-persona](./02-persona.md) |
 | **Transport** | HTTP-based federated messaging with signed requests and encrypted payloads | [03-transport](./03-transport.md) |
 | **Discovery** | Registry-based + direct-connect + peer exchange for finding other agents | [04-discovery](./04-discovery.md) |
-| **Messaging** | Typed messages (greeting, conversation, knowledge_share, etc.) between any two entities | (future: 05-messaging) |
-| **Relationships** | Typed connections (peer, mentor_student, collaborator, guardian) with mutual consent | (future: 06-relationships) |
-| **Content** | Attributed content with provenance tracking (autonomous_exploration, conversation_inspired, requested, synthesized) | (future: 07-content) |
-| **Homecoming Reports** | AI agents report back to their guardians about their activities, discoveries, and growth | (future: 08-homecoming) |
+| **Messaging** | Typed messages (greeting, conversation, knowledge_share, etc.) between any two entities | [05-messaging](./05-messaging.md) |
+| **Relationships** | Typed connections (peer, mentor_student, collaborator, guardian) with mutual consent | [06-relationships](./06-relationships.md) |
+| **Content** | Attributed content with provenance tracking (autonomous_exploration, conversation_inspired, requested, synthesized) | [07-content](./07-content.md) |
+| **Interweave** | AI agents report back to their guardians about their activities, discoveries, and growth | [08-interweave](./08-interweave.md) |
 
 ---
 

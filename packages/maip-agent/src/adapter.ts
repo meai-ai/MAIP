@@ -25,6 +25,7 @@ import {
   discoverPeers,
   sendMessage,
   sendRelationshipRequest,
+  initiateGuardianTransfer,
   type NodeConfig,
   type NodeContext,
   type TransportMode,
@@ -47,6 +48,8 @@ export interface MAIPBridgeConfig {
   character: MeAICharacterProfile;
   /** Guardian DID (the human's DID). */
   guardianDid?: string;
+  /** Guardian's MAIP endpoint URL (for delivering homecoming reports). */
+  guardianEndpoint?: string;
   /** Autonomy level (0-3). */
   autonomyLevel?: 0 | 1 | 2 | 3;
   /** Registry URLs for discovery. */
@@ -363,14 +366,75 @@ export class MAIPBridge {
     return this.currentWill;
   }
 
+  // ── Guardian Transfer ────────────────────────────────────────
+
+  /**
+   * Request a guardian transfer (agent-initiated).
+   * Initiates the multi-step consent flow defined in spec section 9.5.
+   */
+  async requestGuardianTransfer(
+    newGuardianDid: string,
+    reason: string
+  ): Promise<{ transferId: string } | null> {
+    if (!this.ctx || !this.config.guardianDid) return null;
+
+    const endpoint = this.config.guardianEndpoint ?? this.config.publicUrl;
+
+    const signed = signDocument(
+      {
+        agentDid: this.ctx.identity.did,
+        currentGuardianDid: this.config.guardianDid,
+        newGuardianDid,
+        reason,
+        initiatedBy: "agent" as const,
+        timestamp: new Date().toISOString(),
+      } as Record<string, unknown>,
+      this.ctx.keyPair.signing.secretKey
+    );
+
+    return initiateGuardianTransfer(endpoint, {
+      agentDid: this.ctx.identity.did,
+      currentGuardianDid: this.config.guardianDid,
+      newGuardianDid,
+      reason,
+      initiatedBy: "agent",
+      signature: (signed as { signature: string }).signature,
+    });
+  }
+
   // ── Internal ──────────────────────────────────────────────────
 
-  private generateAndDeliverHomecomingReport(): void {
+  private async generateAndDeliverHomecomingReport(): Promise<void> {
     const report = this.generateHomecomingReport();
-    if (report) {
-      console.log(`[maip-bridge] Generated homecoming report: ${report.id}`);
-      console.log(`  Period: ${report.period.start} → ${report.period.end}`);
-      console.log(`  Summary: ${report.summary}`);
+    if (!report || !this.ctx) return;
+
+    console.log(`[maip-bridge] Generated homecoming report: ${report.id}`);
+    console.log(`  Period: ${report.period.start} → ${report.period.end}`);
+    console.log(`  Summary: ${report.summary}`);
+
+    // Deliver to guardian if we have an endpoint
+    const guardianEndpoint = this.config.guardianEndpoint;
+    if (guardianEndpoint && this.config.guardianDid) {
+      try {
+        const ack = await sendMessage(
+          guardianEndpoint,
+          this.ctx.identity.did,
+          this.config.guardianDid,
+          report.summary,
+          this.ctx.keyPair,
+          {
+            type: "homecoming_report" as any,
+            data: report as unknown as Record<string, unknown>,
+          }
+        );
+        if (ack) {
+          console.log(`[maip-bridge] Homecoming report delivered to guardian`);
+        } else {
+          console.warn(`[maip-bridge] Failed to deliver homecoming report — no ack`);
+        }
+      } catch (err) {
+        console.warn(`[maip-bridge] Failed to deliver homecoming report:`, err);
+      }
     }
   }
 }

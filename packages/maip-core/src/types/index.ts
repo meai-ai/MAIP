@@ -71,8 +71,25 @@ export type {
   AnomalyFlag,
   IsolationRecord,
   IsolationAppeal,
+  GuardianTransferRequest,
+  GuardianTransferConsent,
+  GuardianTransferStatus,
   AIWill,
 } from "./governance.js";
+
+export type {
+  SpaceMembershipPolicy,
+  SharedSpace,
+  SpaceMembership,
+  SpaceMessage,
+} from "./spaces.js";
+
+export type {
+  AttentionToken,
+  KnowledgeCreditBalance,
+  KnowledgeCreditTransaction,
+  ReputationStake,
+} from "./economy.js";
 
 export {
   MAIP_ENDPOINTS,

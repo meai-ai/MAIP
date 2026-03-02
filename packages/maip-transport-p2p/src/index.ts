@@ -37,7 +37,7 @@ export {
 export { Libp2pTransport } from "./p2p-transport.js";
 
 // Protocol handlers
-export { registerP2PHandlers } from "./p2p-handlers.js";
+export { registerP2PHandlers, startP2PNode } from "./p2p-handlers.js";
 
 // DHT discovery
 export {

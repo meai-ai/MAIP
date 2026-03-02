@@ -66,6 +66,45 @@ export const IsolationAppealSchema = z.object({
   resolvedAt: z.string().datetime().nullable(),
 });
 
+// ── Guardian Transfer ──
+
+export const GuardianTransferRequestSchema = z.object({
+  agentDid: z.string(),
+  currentGuardianDid: z.string(),
+  newGuardianDid: z.string(),
+  reason: z.string(),
+  initiatedBy: z.enum(["agent", "current_guardian", "new_guardian"]),
+  timestamp: z.string().datetime(),
+  signature: z.string(),
+});
+
+export const GuardianTransferConsentSchema = z.object({
+  transferId: z.string(),
+  consentingParty: z.string(),
+  approved: z.boolean(),
+  timestamp: z.string().datetime(),
+  signature: z.string(),
+});
+
+export const GuardianTransferStatusSchema = z.object({
+  id: z.string(),
+  agentDid: z.string(),
+  currentGuardianDid: z.string(),
+  newGuardianDid: z.string(),
+  reason: z.string(),
+  initiatedBy: z.string(),
+  consents: z.array(
+    z.object({
+      party: z.string(),
+      approved: z.boolean(),
+      timestamp: z.string().datetime(),
+    })
+  ),
+  status: z.enum(["pending", "approved", "rejected", "completed", "expired"]),
+  createdAt: z.string().datetime(),
+  completedAt: z.string().datetime().optional(),
+});
+
 // ── AI Will ──
 
 export const AIWillSchema = z.object({
