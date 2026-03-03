@@ -213,3 +213,31 @@ export {
   type DIDResolution,
   type FederationHealth,
 } from "./handlers/federation-core.js";
+
+// Fork Protocol
+export {
+  processFork,
+  verifyNotClone,
+  type ForkRequest,
+  type ForkResult,
+  type ForkLineage,
+} from "./handlers/fork-core.js";
+
+// Distributed Consensus
+export {
+  createIsolationProposal,
+  voteOnProposal,
+  getProposals_,
+  getProposal,
+  type IsolationProposal,
+} from "./handlers/consensus-core.js";
+
+// Distributed Fact Verification
+export {
+  submitFactClaim,
+  verifyFactClaim,
+  getFactClaim,
+  searchFactClaims,
+  type FactClaim,
+  type FactVerification,
+} from "./handlers/fact-verification-core.js";

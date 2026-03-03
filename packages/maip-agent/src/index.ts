@@ -94,6 +94,7 @@ export {
 export {
   I18n,
   NoOpVoiceProvider,
+  WebSpeechVoiceProvider,
   type Locale,
   type LanguageDetection,
   type VoiceProvider,
@@ -105,3 +106,39 @@ export {
   type TranslationRequest,
   type TranslationResult,
 } from "./multilingual.js";
+
+// Proxy Policy (Guardian Privacy Filter)
+export {
+  ProxyPolicy,
+  type PrivacyLevel,
+  type SharingRule,
+  type PolicyEvaluation,
+} from "./proxy-policy.js";
+
+// Reflection Engine (Autonomous Thought)
+export {
+  ReflectionEngine,
+  type Thought,
+  type ThoughtType,
+  type ReflectionSynthesizer,
+} from "./reflection-engine.js";
+
+// LLM Adapter (Model-Agnostic)
+export {
+  NoOpLLMAdapter,
+  LLMRouter,
+  type LLMAdapter,
+  type LLMRequest,
+  type LLMResponse,
+  type LLMCapability,
+  type ChatMessage,
+  type EmbeddingResult,
+} from "./llm-adapter.js";
+
+// Social Engineering Guard
+export {
+  SocialEngineeringGuard,
+  type SECategory,
+  type SEIndicator,
+  type SafetyAssessment,
+} from "./social-engineering-guard.js";

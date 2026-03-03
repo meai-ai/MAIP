@@ -119,11 +119,11 @@ export function registerFederatedRegistry(
  * Resolve a DID by querying federated registries.
  * First checks local registry, then walks the federation graph.
  */
-export function resolveDID(
+export async function resolveDID(
   ctx: NodeContext,
   did: string,
   maxHops = 3
-): TransportResult<DIDResolution> {
+): Promise<TransportResult<DIDResolution>> {
   const startTime = Date.now();
 
   // Step 1: Check local registrations
@@ -163,10 +163,42 @@ export function resolveDID(
     };
   }
 
-  // Step 3: Would query federated registries (async in real implementation)
-  // For now, return not-found with federation info
+  // Step 3: Query federated registries (iterative, breadth-first)
   const registries = getRegistries(ctx.identity.did);
   const reachable = registries.filter((r) => r.isReachable);
+
+  // Try each reachable registry (up to maxHops)
+  for (let hop = 0; hop < Math.min(maxHops, reachable.length); hop++) {
+    const registry = reachable[hop];
+    try {
+      const response = await fetch(
+        `${registry.endpoint}/maip/federation/resolve/${encodeURIComponent(did)}`,
+        {
+          headers: { "Accept": "application/json" },
+          signal: AbortSignal.timeout(5000),
+        }
+      );
+      if (response.ok) {
+        const body = await response.json() as TransportResult<DIDResolution>;
+        if (body.ok && body.data?.found) {
+          // Update trust score positively
+          updateRegistryTrust(ctx, registry.did, true);
+          return {
+            ok: true,
+            data: {
+              ...body.data,
+              hops: hop + 1,
+              resolutionTimeMs: Date.now() - startTime,
+            },
+            httpStatus: 200,
+          };
+        }
+      }
+    } catch {
+      // Registry unreachable — update trust negatively
+      updateRegistryTrust(ctx, registry.did, false);
+    }
+  }
 
   return {
     ok: true,

@@ -81,6 +81,22 @@ import {
   listRegistriesHandler,
   updateTrustHandler,
 } from "./handlers/federation.js";
+import {
+  forkHandler,
+  verifyForkHandler,
+} from "./handlers/fork.js";
+import {
+  proposeIsolationHandler,
+  voteProposalHandler,
+  listProposalsHandler,
+  getProposalHandler,
+} from "./handlers/consensus.js";
+import {
+  submitFactHandler,
+  verifyFactHandler,
+  getFactHandler,
+  searchFactsHandler,
+} from "./handlers/fact-verification.js";
 
 /** Create the Express app with all MAIP routes. */
 export function createApp(ctx: NodeContext): Express {
@@ -212,6 +228,22 @@ export function createApp(ctx: NodeContext): Express {
   app.get("/maip/federation/health", federationHealthHandler(ctx));
   app.get("/maip/federation/registries", listRegistriesHandler(ctx));
   app.post("/maip/federation/trust", updateTrustHandler(ctx));
+
+  // Fork protocol endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/fork`, forkHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/fork/verify/:did`, verifyForkHandler(ctx));
+
+  // Distributed consensus endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/consensus/propose`, proposeIsolationHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/consensus/:id/vote`, voteProposalHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/consensus`, listProposalsHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/consensus/:id`, getProposalHandler(ctx));
+
+  // Distributed fact verification endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/facts`, submitFactHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/facts/:id/verify`, verifyFactHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/facts/:id`, getFactHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/facts`, searchFactsHandler(ctx));
 
   return app;
 }

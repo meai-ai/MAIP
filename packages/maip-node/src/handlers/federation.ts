@@ -22,9 +22,9 @@ export function registerRegistryHandler(ctx: NodeContext): RequestHandler {
 
 /** GET /maip/federation/resolve/:did — resolve a DID across federation. */
 export function resolveDidHandler(ctx: NodeContext): RequestHandler {
-  return (req, res) => {
+  return async (req, res) => {
     const maxHops = req.query.maxHops ? Number(req.query.maxHops) : 3;
-    const result = resolveDID(ctx, req.params.did as string, maxHops);
+    const result = await resolveDID(ctx, req.params.did as string, maxHops);
     res.status(result.httpStatus ?? 200).json(result);
   };
 }

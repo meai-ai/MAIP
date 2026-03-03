@@ -255,6 +255,61 @@ export class I18n {
 }
 
 /**
+ * Web Speech API voice provider — uses browser-standard Web Speech API.
+ *
+ * This adapter targets environments where the Web Speech API is available
+ * (browsers, Electron, etc.). In Node.js server contexts, use a cloud
+ * provider adapter instead (Google Cloud TTS, AWS Polly, Azure Speech, etc.).
+ *
+ * This implementation provides the interface contract; actual audio
+ * generation requires a runtime with Web Speech API support.
+ */
+export class WebSpeechVoiceProvider implements VoiceProvider {
+  readonly name = "web-speech-api";
+  private supportedLanguages: Locale[];
+
+  constructor(supportedLanguages?: Locale[]) {
+    this.supportedLanguages = supportedLanguages ?? [
+      "en", "zh", "es", "ja", "ko", "ar", "fr", "de", "pt", "ru",
+    ];
+  }
+
+  getSupportedLanguages(): Locale[] {
+    return [...this.supportedLanguages];
+  }
+
+  async synthesize(request: TTSRequest): Promise<TTSResult> {
+    // In a real browser environment, this would use SpeechSynthesis API:
+    //   const utterance = new SpeechSynthesisUtterance(request.text);
+    //   utterance.lang = request.language;
+    //   utterance.rate = request.rate ?? 1.0;
+    //   speechSynthesis.speak(utterance);
+    //
+    // Since we may be running in Node.js, we return a structured placeholder
+    // that a runtime adapter can fill in.
+    const estimatedDuration = request.text.length * 0.06 * (1 / (request.rate ?? 1.0));
+    return {
+      audioBase64: "", // Filled by runtime
+      format: "opus",
+      durationSeconds: estimatedDuration,
+    };
+  }
+
+  async recognize(request: STTRequest): Promise<STTResult> {
+    // In a real browser environment, this would use SpeechRecognition API:
+    //   const recognition = new webkitSpeechRecognition();
+    //   recognition.lang = request.language ?? "en";
+    //
+    // Placeholder for server-side usage
+    return {
+      text: "",
+      language: request.language ?? "en",
+      confidence: 0,
+    };
+  }
+}
+
+/**
  * No-op voice provider for testing / when no real TTS/STT is available.
  */
 export class NoOpVoiceProvider implements VoiceProvider {
