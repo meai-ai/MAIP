@@ -97,6 +97,13 @@ import {
   getFactHandler,
   searchFactsHandler,
 } from "./handlers/fact-verification.js";
+import {
+  upsertWillHandler,
+  getWillHandler,
+  deleteWillHandler,
+  receiveBackupHandler,
+  getBackupShardsHandler,
+} from "./handlers/ai-will.js";
 
 /** Create the Express app with all MAIP routes. */
 export function createApp(ctx: NodeContext): Express {
@@ -109,7 +116,7 @@ export function createApp(ctx: NodeContext): Express {
   app.use((_req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Content-Type, X-MAIP-Version, X-MAIP-Sender, X-MAIP-Signature, X-MAIP-Timestamp");
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
     next();
   });
 
@@ -244,6 +251,13 @@ export function createApp(ctx: NodeContext): Express {
   app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/facts/:id/verify`, verifyFactHandler(ctx));
   app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/facts/:id`, getFactHandler(ctx));
   app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/facts`, searchFactsHandler(ctx));
+
+  // AI Will & Distributed Backup endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/will`, upsertWillHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/will/:did`, getWillHandler(ctx));
+  app.delete(`${MAIP_ENDPOINTS.GOVERNANCE}/will/:did`, deleteWillHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/backup`, receiveBackupHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/backup/:did`, getBackupShardsHandler(ctx));
 
   return app;
 }

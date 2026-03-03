@@ -47,6 +47,10 @@ export {
   joinSpace,
   postToSpace,
   getSpaceMessages,
+  upsertAIWill,
+  getAIWill,
+  sendBackupShard,
+  getBackupShards,
   type SendMessageOptions,
 } from "./client.js";
 
@@ -241,3 +245,14 @@ export {
   type FactClaim,
   type FactVerification,
 } from "./handlers/fact-verification-core.js";
+
+// AI Will & Distributed Backup
+export {
+  upsertWill,
+  getWill,
+  deleteWill,
+  receiveBackupShard,
+  getBackupShards as getBackupShardsForAgent,
+  pruneExpiredBackups,
+  type BackupShard,
+} from "./handlers/ai-will-core.js";

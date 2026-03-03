@@ -142,3 +142,11 @@ export {
   type SEIndicator,
   type SafetyAssessment,
 } from "./social-engineering-guard.js";
+
+// Autonomous Scheduler
+export {
+  AgentScheduler,
+  type SchedulerConfig,
+  type TaskStatus,
+  type SchedulerCallback,
+} from "./scheduler.js";

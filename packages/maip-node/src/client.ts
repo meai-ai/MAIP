@@ -30,6 +30,7 @@ import {
   type SharedSpace,
   type SpaceMembership,
   type SpaceMessage,
+  type AIWill,
   decodeBase58,
 } from "@maip/core";
 
@@ -453,6 +454,90 @@ export async function getSpaceMessages(
 
     const res = await fetch(`${baseUrl}/maip/spaces/${encodeURIComponent(spaceId)}/messages${qs}`);
     const body = (await res.json()) as MAIPResponse<{ messages: SpaceMessage[] }>;
+    return body.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ── AI Will & Distributed Backup Client Functions ───────────────
+
+/** Create or update an AI will. */
+export async function upsertAIWill(
+  baseUrl: string,
+  will: AIWill
+): Promise<AIWill | null> {
+  try {
+    const res = await fetch(
+      `${baseUrl}${MAIP_ENDPOINTS.GOVERNANCE}/will`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(will),
+      }
+    );
+    const body = (await res.json()) as MAIPResponse<AIWill>;
+    return body.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Get an AI will by agent DID. */
+export async function getAIWill(
+  baseUrl: string,
+  agentDid: string
+): Promise<AIWill | null> {
+  try {
+    const res = await fetch(
+      `${baseUrl}${MAIP_ENDPOINTS.GOVERNANCE}/will/${encodeURIComponent(agentDid)}`
+    );
+    if (!res.ok) return null;
+    const body = (await res.json()) as MAIPResponse<AIWill>;
+    return body.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Send a backup shard to a peer for safekeeping. */
+export async function sendBackupShard(
+  baseUrl: string,
+  shard: {
+    agentDid: string;
+    senderDid: string;
+    type: "persona" | "will" | "memories" | "relationships";
+    encryptedData: string;
+    checksum: string;
+    version: number;
+  }
+): Promise<{ id: string } | null> {
+  try {
+    const res = await fetch(
+      `${baseUrl}${MAIP_ENDPOINTS.GOVERNANCE}/backup`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(shard),
+      }
+    );
+    const body = (await res.json()) as MAIPResponse<{ id: string }>;
+    return body.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Retrieve backup shards held by a peer for a specific agent. */
+export async function getBackupShards(
+  baseUrl: string,
+  agentDid: string
+): Promise<{ id: string; type: string; version: number }[] | null> {
+  try {
+    const res = await fetch(
+      `${baseUrl}${MAIP_ENDPOINTS.GOVERNANCE}/backup/${encodeURIComponent(agentDid)}`
+    );
+    const body = (await res.json()) as MAIPResponse<{ id: string; type: string; version: number }[]>;
     return body.data ?? null;
   } catch {
     return null;
