@@ -26,7 +26,7 @@ export { createApp, startServer } from "./server.js";
 export { initNode, updateIdentity, type InitOptions } from "./init.js";
 
 // Context
-export type { NodeConfig, NodeContext, TransportMode, P2PConfig } from "./context.js";
+export type { NodeConfig, NodeContext, TransportMode, P2PConfig, TLSConfig } from "./context.js";
 
 // Client
 export {
@@ -81,6 +81,35 @@ export {
   processPostToSpace,
   processGetSpaceMessages,
 } from "./handlers/spaces-core.js";
+export {
+  processKeyRotation,
+  verifyKeyRotation,
+  processKeyRevocation,
+} from "./handlers/key-rotation-core.js";
+export {
+  processAbuseReport,
+  processGetAbuseReports,
+  processRightToRefuse,
+} from "./handlers/guardian-abuse-core.js";
+export {
+  analyzeEchoChamber,
+  suggestIntroductions,
+} from "./handlers/anti-polarization-core.js";
+export {
+  proposeCulturalNorms,
+  getCulturalNorms,
+} from "./handlers/cultural-norms-core.js";
+export {
+  issueAttentionTokens,
+  getAttentionBalance,
+  spendAttentionTokens,
+  getKnowledgeCreditBalance,
+  transferKnowledgeCredits,
+  awardKnowledgeCredits,
+  createReputationStake,
+  resolveReputationStake,
+  getReputationStakes,
+} from "./handlers/economy-core.js";
 
 // Stores
 export {
@@ -94,5 +123,19 @@ export {
   type SharedSpaceEntry,
   type SpaceMembershipEntry,
   type SpaceMessageEntry,
+  type GuardianAbuseReportEntry,
+  type RightToRefuseEntry,
+  type AttentionTokenEntry,
+  type KnowledgeCreditBalanceEntry,
+  type KnowledgeCreditTransactionEntry,
+  type ReputationStakeEntry,
 } from "./stores/index.js";
 export { JsonStore } from "./stores/json-store.js";
+
+// Accessibility
+export {
+  type VoiceAdapter,
+  NoOpVoiceAdapter,
+  toMinimalPayload,
+  OfflineQueue,
+} from "./accessibility.js";

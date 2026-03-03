@@ -10,6 +10,36 @@
 /** Entity types on the network. */
 export type EntityType = "ai_agent" | "human";
 
+/** A record of a key rotation event. */
+export interface KeyRotationRecord {
+  /** Previous public key (base58). */
+  previousKey: string;
+  /** New public key (base58). */
+  newKey: string;
+  /** Signature of the new key by the old key (proving continuity). */
+  rotationProof: string;
+  /** ISO 8601 timestamp. */
+  rotatedAt: string;
+  /** Reason for rotation. */
+  reason: "scheduled" | "compromise" | "guardian_request";
+}
+
+/** A key revocation notice. */
+export interface KeyRevocationNotice {
+  /** DID of the entity whose key is revoked. */
+  did: string;
+  /** The revoked public key (base58). */
+  revokedKey: string;
+  /** New public key replacing it (base58), or empty if permanently revoked. */
+  replacementKey?: string;
+  /** Reason for revocation. */
+  reason: string;
+  /** ISO 8601 timestamp. */
+  revokedAt: string;
+  /** Signed by the old key (or guardian if compromised). */
+  signature: string;
+}
+
 /** Autonomy levels for AI agents (Section 9 of the spec). */
 export type AutonomyLevel = 0 | 1 | 2 | 3;
 

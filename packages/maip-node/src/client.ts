@@ -9,11 +9,13 @@ import {
   MAIP_VERSION,
   sign,
   signDocument,
+  encrypt,
   type MAIPKeyPair,
   type MAIPMessage,
   type MessageAck,
   type MessageType,
   type ContentProvenance,
+  type EncryptionEnvelope,
   type RelationshipType,
   type RelationshipPermissions,
   type RelationshipRequest,
@@ -28,6 +30,7 @@ import {
   type SharedSpace,
   type SpaceMembership,
   type SpaceMessage,
+  decodeBase58,
 } from "@maip/core";
 
 export interface SendMessageOptions {
@@ -37,6 +40,8 @@ export interface SendMessageOptions {
   replyTo?: string;
   conversationId?: string;
   data?: Record<string, unknown>;
+  /** Recipient's X25519 encryption key (base58). If provided, message will be auto-encrypted. */
+  recipientEncryptionKey?: string;
 }
 
 /** Send a message to a remote MAIP node. */
@@ -48,6 +53,21 @@ export async function sendMessage(
   keyPair: MAIPKeyPair,
   options: SendMessageOptions = {}
 ): Promise<MessageAck | null> {
+  // Auto-encrypt if recipient encryption key is provided
+  let encryptedEnvelope: EncryptionEnvelope | undefined;
+  let messageText: string | undefined = text;
+
+  if (options.recipientEncryptionKey) {
+    try {
+      const recipientPubKey = decodeBase58(options.recipientEncryptionKey);
+      const { ciphertext, envelope } = encrypt(text, recipientPubKey);
+      messageText = ciphertext;
+      encryptedEnvelope = envelope;
+    } catch {
+      // Fall back to plaintext if encryption fails
+    }
+  }
+
   const message: Omit<MAIPMessage, "signature"> = {
     id: uuid(),
     type: options.type ?? "conversation",
@@ -55,11 +75,12 @@ export async function sendMessage(
     to: toDid,
     timestamp: new Date().toISOString(),
     content: {
-      text,
+      text: messageText,
       provenance: options.provenance ?? "requested",
       ...(options.thinkingTrace ? { thinkingTrace: options.thinkingTrace } : {}),
       ...(options.data ? { data: options.data } : {}),
     },
+    ...(encryptedEnvelope ? { encrypted: encryptedEnvelope } : {}),
     ...(options.replyTo ? { replyTo: options.replyTo } : {}),
     ...(options.conversationId ? { conversationId: options.conversationId } : {}),
   };

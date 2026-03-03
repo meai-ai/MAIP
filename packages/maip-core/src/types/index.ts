@@ -9,6 +9,8 @@ export type {
   Endpoints,
   Capability,
   IdentityDocument,
+  KeyRotationRecord,
+  KeyRevocationNotice,
 } from "./identity.js";
 
 export type {
@@ -36,6 +38,7 @@ export type {
   RelationshipType,
   RelationshipStatus,
   RelationshipPermissions,
+  CulturalNorms,
   Relationship,
   RelationshipRequest,
   RelationshipResponse,
@@ -74,6 +77,9 @@ export type {
   GuardianTransferRequest,
   GuardianTransferConsent,
   GuardianTransferStatus,
+  GuardianAbuseType,
+  GuardianAbuseReport,
+  RightToRefuseRecord,
   AIWill,
 } from "./governance.js";
 

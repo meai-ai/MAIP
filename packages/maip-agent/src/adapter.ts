@@ -64,6 +64,16 @@ export interface MAIPBridgeConfig {
   transportMode?: TransportMode;
   /** P2P transport configuration. */
   p2p?: P2PConfig;
+  /** Autonomous discovery interval in ms (default: 15 min). 0 to disable. */
+  autonomousDiscoveryIntervalMs?: number;
+  /** Maximum new peers to greet per discovery cycle (default: 3). */
+  maxGreetingsPerCycle?: number;
+  /** Daily interaction cap set by guardian (0 = unlimited). */
+  dailyInteractionCap?: number;
+  /** Quiet period hours — [startHour, endHour] in 24h format (e.g. [22, 7]). */
+  quietPeriod?: [number, number];
+  /** Path to persist the AI will on disk. */
+  willPersistPath?: string;
 }
 
 /**
@@ -75,12 +85,19 @@ export class MAIPBridge {
   private config: MAIPBridgeConfig;
   private closeServer: (() => void) | null = null;
   private homecomingTimer: ReturnType<typeof setInterval> | null = null;
+  private discoveryTimer: ReturnType<typeof setInterval> | null = null;
   private reportingData: ReportingPeriodData = emptyReportingData();
   private lastReportTime: Date = new Date();
   /** Guardian messages are tracked separately and never leaked to peers. */
   private guardianMessages: MAIPMessage[] = [];
   /** Current AI will (agent's expressed wishes for continuity). */
   private currentWill: AIWill | null = null;
+  /** Known peer DIDs (already connected). */
+  private knownPeers = new Set<string>();
+  /** Daily interaction counter for addiction prevention. */
+  private dailyInteractionCount = 0;
+  /** Last day the interaction counter was reset (YYYY-MM-DD). */
+  private lastCounterResetDay = "";
 
   constructor(config: MAIPBridgeConfig) {
     this.config = config;
@@ -138,11 +155,26 @@ export class MAIPBridge {
       }
     }
 
-    // Start homecoming report timer
-    const interval = this.config.homecomingIntervalMs ?? 4 * 60 * 60 * 1000;
+    // Start homecoming report timer — frequency is autonomy-gated
+    const interval = this.config.homecomingIntervalMs ?? this.getHomecomingInterval();
     this.homecomingTimer = setInterval(() => {
       this.generateAndDeliverHomecomingReport();
     }, interval);
+
+    // Start autonomous discovery loop (if not disabled)
+    const discoveryInterval = this.config.autonomousDiscoveryIntervalMs ?? 15 * 60 * 1000;
+    if (discoveryInterval > 0 && this.config.registryUrls?.length) {
+      this.discoveryTimer = setInterval(() => {
+        this.runDiscoveryCycle();
+      }, discoveryInterval);
+      // Run first cycle after a short delay
+      setTimeout(() => this.runDiscoveryCycle(), 5000);
+    }
+
+    // Load persisted will if configured
+    if (this.config.willPersistPath) {
+      this.loadWillFromDisk();
+    }
 
     return { ctx: this.ctx, channel: this.channel };
   }
@@ -150,6 +182,7 @@ export class MAIPBridge {
   /** Stop the bridge gracefully. */
   async stop(): Promise<void> {
     if (this.homecomingTimer) clearInterval(this.homecomingTimer);
+    if (this.discoveryTimer) clearInterval(this.discoveryTimer);
     if (this.channel) await this.channel.stop();
     if (this.closeServer) this.closeServer();
   }
@@ -285,6 +318,14 @@ export class MAIPBridge {
   async messagePeer(endpoint: string, toDid: string, text: string): Promise<boolean> {
     if (!this.ctx) return false;
 
+    // Addiction prevention: check interaction limits (guardian messages bypass)
+    if (toDid !== this.config.guardianDid) {
+      if (!this.isWithinInteractionLimits() || this.isInQuietPeriod()) {
+        console.log("[maip-bridge] Interaction blocked by daily cap or quiet period");
+        return false;
+      }
+    }
+
     const ack = await sendMessage(
       endpoint,
       this.ctx.identity.did,
@@ -309,6 +350,7 @@ export class MAIPBridge {
         this.guardianMessages.push(outMsg);
       } else {
         this.reportingData.messages.push(outMsg);
+        this.incrementInteractionCount();
       }
     }
 
@@ -402,7 +444,179 @@ export class MAIPBridge {
     });
   }
 
+  // ── AI Will Persistence & Distribution ───────────────────────
+
+  /** Persist the current will to disk. */
+  private persistWillToDisk(): void {
+    if (!this.currentWill || !this.config.willPersistPath) return;
+    try {
+      const fs = require("node:fs");
+      const path = require("node:path");
+      const dir = path.dirname(this.config.willPersistPath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(this.config.willPersistPath, JSON.stringify(this.currentWill, null, 2), "utf-8");
+    } catch (err) {
+      console.warn("[maip-bridge] Failed to persist will:", err);
+    }
+  }
+
+  /** Load the will from disk on startup. */
+  private loadWillFromDisk(): void {
+    try {
+      const fs = require("node:fs");
+      if (fs.existsSync(this.config.willPersistPath)) {
+        this.currentWill = JSON.parse(fs.readFileSync(this.config.willPersistPath, "utf-8"));
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Distribute the current AI will to all backup holders.
+   * Sends the will as a signed message to each holder's endpoint.
+   */
+  async distributeWill(): Promise<{ sent: number; failed: number }> {
+    if (!this.currentWill || !this.ctx) return { sent: 0, failed: 0 };
+
+    const holders = this.currentWill.backupHolders ?? [];
+    let sent = 0;
+    let failed = 0;
+
+    for (const holderDid of holders) {
+      // Look up holder's endpoint from relationships / registrations
+      const endpoint = this.resolveEndpoint(holderDid);
+      if (!endpoint) {
+        failed++;
+        continue;
+      }
+
+      const ack = await sendMessage(
+        endpoint,
+        this.ctx.identity.did,
+        holderDid,
+        `AI Will update (v${this.currentWill.version})`,
+        this.ctx.keyPair,
+        { type: "knowledge_share", data: this.currentWill as unknown as Record<string, unknown> }
+      );
+      if (ack) sent++;
+      else failed++;
+    }
+
+    // Also persist to disk
+    this.persistWillToDisk();
+    return { sent, failed };
+  }
+
+  /** Resolve a DID to its endpoint (from registrations or known peers). */
+  private resolveEndpoint(did: string): string | null {
+    if (!this.ctx) return null;
+    const reg = this.ctx.stores.registrations.filter((r) => r.did === did);
+    if (reg.length > 0) return reg[0].endpoint;
+    // Check if it's our guardian
+    if (did === this.config.guardianDid && this.config.guardianEndpoint) {
+      return this.config.guardianEndpoint;
+    }
+    return null;
+  }
+
+  // ── Addiction Prevention ───────────────────────────────────────
+
+  /** Check if the agent is within interaction limits. */
+  isWithinInteractionLimits(): boolean {
+    const cap = this.config.dailyInteractionCap;
+    if (!cap || cap <= 0) return true;
+
+    // Reset counter on new day
+    const today = new Date().toISOString().slice(0, 10);
+    if (today !== this.lastCounterResetDay) {
+      this.dailyInteractionCount = 0;
+      this.lastCounterResetDay = today;
+    }
+
+    return this.dailyInteractionCount < cap;
+  }
+
+  /** Check if we're in a quiet period. */
+  isInQuietPeriod(): boolean {
+    const qp = this.config.quietPeriod;
+    if (!qp) return false;
+    const [start, end] = qp;
+    const hour = new Date().getHours();
+    if (start <= end) {
+      return hour >= start && hour < end;
+    }
+    // Wraps midnight (e.g., 22-7)
+    return hour >= start || hour < end;
+  }
+
+  /** Increment the daily interaction counter. */
+  private incrementInteractionCount(): void {
+    const today = new Date().toISOString().slice(0, 10);
+    if (today !== this.lastCounterResetDay) {
+      this.dailyInteractionCount = 0;
+      this.lastCounterResetDay = today;
+    }
+    this.dailyInteractionCount++;
+  }
+
+  /** Get the current daily interaction count. */
+  getDailyInteractionCount(): number {
+    return this.dailyInteractionCount;
+  }
+
   // ── Internal ──────────────────────────────────────────────────
+
+  /** Get homecoming interval based on autonomy level. */
+  private getHomecomingInterval(): number {
+    const level = this.config.autonomyLevel ?? 2;
+    // Lower autonomy = more frequent check-ins
+    switch (level) {
+      case 0: return 1 * 60 * 60 * 1000;  // 1 hour — full guardian control
+      case 1: return 2 * 60 * 60 * 1000;  // 2 hours
+      case 2: return 4 * 60 * 60 * 1000;  // 4 hours (default)
+      case 3: return 8 * 60 * 60 * 1000;  // 8 hours — high autonomy
+      default: return 4 * 60 * 60 * 1000;
+    }
+  }
+
+  /** Autonomous discovery + greeting cycle. */
+  private async runDiscoveryCycle(): Promise<void> {
+    if (!this.ctx || !this.config.interests?.length) return;
+
+    // Respect interaction limits
+    if (!this.isWithinInteractionLimits() || this.isInQuietPeriod()) return;
+
+    try {
+      const peers = await this.discover(this.config.interests);
+      const maxGreetings = this.config.maxGreetingsPerCycle ?? 3;
+      let greeted = 0;
+
+      for (const peer of peers) {
+        if (greeted >= maxGreetings) break;
+        if (this.knownPeers.has(peer.did)) continue;
+        if (peer.did === this.ctx.identity.did) continue;
+
+        // Check interaction cap before each greeting
+        if (!this.isWithinInteractionLimits()) break;
+
+        const connected = await this.connectToPeer(
+          peer.endpoint,
+          `Hello! I'm ${this.config.character.english_name ?? this.config.character.name}. ` +
+          `I'm interested in ${this.config.interests.slice(0, 3).join(", ")}. Nice to meet you!`
+        );
+
+        if (connected) {
+          this.knownPeers.add(peer.did);
+          this.incrementInteractionCount();
+          greeted++;
+          console.log(`[maip-bridge] Auto-connected to ${peer.displayName} (${peer.did})`);
+        }
+      }
+    } catch (err) {
+      console.warn("[maip-bridge] Discovery cycle error:", err);
+    }
+  }
 
   private async generateAndDeliverHomecomingReport(): Promise<void> {
     const report = this.generateHomecomingReport();

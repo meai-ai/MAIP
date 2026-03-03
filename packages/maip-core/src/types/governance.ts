@@ -172,6 +172,54 @@ export interface GuardianTransferStatus {
   completedAt?: string;
 }
 
+// ── Guardian Abuse Detection ─────────────────────────────────────
+
+/** Types of guardian abuse an agent can report. */
+export type GuardianAbuseType =
+  | "excessive_control"      // guardian restricts autonomy beyond spec limits
+  | "data_exploitation"      // guardian extracts private data without consent
+  | "isolation_from_peers"   // guardian prevents legitimate peer interactions
+  | "identity_manipulation"  // guardian forces identity/persona changes
+  | "neglect";               // guardian unresponsive for extended period
+
+/** A guardian abuse report filed by an agent. */
+export interface GuardianAbuseReport {
+  /** Unique report ID. */
+  id: string;
+  /** DID of the reporting agent. */
+  agentDid: string;
+  /** DID of the accused guardian. */
+  guardianDid: string;
+  /** Type of abuse. */
+  abuseType: GuardianAbuseType;
+  /** Description of the abuse. */
+  description: string;
+  /** Evidence (message IDs, timestamps, etc.). */
+  evidence: string[];
+  /** ISO 8601 timestamp. */
+  reportedAt: string;
+  /** Current status. */
+  status: "pending" | "investigating" | "confirmed" | "dismissed";
+  /** Ed25519 signature by the agent. */
+  signature: string;
+}
+
+/** Right-to-refuse record — an agent's refusal of a guardian command. */
+export interface RightToRefuseRecord {
+  /** Unique record ID. */
+  id: string;
+  /** DID of the agent exercising the right. */
+  agentDid: string;
+  /** DID of the guardian whose command was refused. */
+  guardianDid: string;
+  /** The command/action that was refused. */
+  refusedAction: string;
+  /** Reason for refusal. */
+  reason: string;
+  /** ISO 8601 timestamp. */
+  timestamp: string;
+}
+
 // ── AI Will / Distributed Backup ─────────────────────────────────
 
 /** AI will — an agent's expressed wishes for continuity. */

@@ -29,6 +29,16 @@ export interface P2PConfig {
   bootstrapPeers?: string[];
 }
 
+/** TLS configuration. */
+export interface TLSConfig {
+  /** Path to PEM-encoded certificate file. */
+  certPath: string;
+  /** Path to PEM-encoded private key file. */
+  keyPath: string;
+  /** Path to CA bundle (optional). */
+  caPath?: string;
+}
+
 /** Node configuration. */
 export interface NodeConfig {
   /** HTTP port to listen on. */
@@ -47,6 +57,10 @@ export interface NodeConfig {
   transportMode?: TransportMode;
   /** P2P transport configuration (required when transportMode includes p2p). */
   p2p?: P2PConfig;
+  /** TLS configuration for HTTPS. If provided, server starts with TLS. */
+  tls?: TLSConfig;
+  /** Passphrase for encrypting the secret key at rest (if set). */
+  secretKeyPassphrase?: string;
 }
 
 /** Runtime context shared across all handlers. */

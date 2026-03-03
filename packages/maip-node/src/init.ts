@@ -7,6 +7,31 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+
+/** Encrypt a secret key string with a passphrase using AES-256-GCM. */
+function encryptSecretKey(plaintext: string, passphrase: string): string {
+  const salt = crypto.randomBytes(16);
+  const key = crypto.scryptSync(passphrase, salt, 32);
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(plaintext, "utf-8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return JSON.stringify({
+    salt: salt.toString("base64"),
+    iv: iv.toString("base64"),
+    tag: tag.toString("base64"),
+    data: encrypted.toString("base64"),
+  });
+}
+
+/** Decrypt a secret key string encrypted with encryptSecretKey. */
+function decryptSecretKey(encryptedStr: string, passphrase: string): string {
+  const { salt, iv, tag, data } = JSON.parse(encryptedStr);
+  const key = crypto.scryptSync(passphrase, Buffer.from(salt, "base64"), 32);
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, Buffer.from(iv, "base64"));
+  decipher.setAuthTag(Buffer.from(tag, "base64"));
+  return Buffer.concat([decipher.update(Buffer.from(data, "base64")), decipher.final()]).toString("utf-8");
+}
 import {
   generateKeyPair,
   importSecretKey,
@@ -57,7 +82,15 @@ export function initNode(
 
   if (fs.existsSync(keyPath) && fs.existsSync(identityPath)) {
     // Load existing
-    const secretKeyBase64 = fs.readFileSync(keyPath, "utf-8").trim();
+    const rawKey = fs.readFileSync(keyPath, "utf-8").trim();
+    const passphrase = config.secretKeyPassphrase;
+    let secretKeyBase64: string;
+    if (passphrase && rawKey.startsWith("{")) {
+      // Encrypted key — decrypt it
+      secretKeyBase64 = decryptSecretKey(rawKey, passphrase);
+    } else {
+      secretKeyBase64 = rawKey;
+    }
     keyPair = importSecretKey(secretKeyBase64);
     identity = JSON.parse(fs.readFileSync(identityPath, "utf-8"));
     // Generate fresh instance nonce on each startup (unique active instance)
@@ -110,8 +143,14 @@ export function initNode(
       keyPair.signing.secretKey
     ) as unknown as IdentityDocument;
 
-    // Save
-    fs.writeFileSync(keyPath, exportSecretKey(keyPair), "utf-8");
+    // Save (encrypt secret key if passphrase is configured)
+    const exportedKey = exportSecretKey(keyPair);
+    const passphrase = config.secretKeyPassphrase;
+    if (passphrase) {
+      fs.writeFileSync(keyPath, encryptSecretKey(exportedKey, passphrase), "utf-8");
+    } else {
+      fs.writeFileSync(keyPath, exportedKey, "utf-8");
+    }
     fs.writeFileSync(identityPath, JSON.stringify(identity, null, 2), "utf-8");
   }
 

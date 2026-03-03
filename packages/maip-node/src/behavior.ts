@@ -13,6 +13,17 @@ const WINDOW_MS = 24 * 60 * 60 * 1000; // 24-hour rolling window
 const RATE_SPIKE_THRESHOLD = 3.0; // 3x above baseline triggers alert
 const TYPE_SHIFT_THRESHOLD = 0.5; // 50% deviation in type ratios
 
+// Content pattern anomaly thresholds
+const SUSPICIOUS_PATTERNS = [
+  /(?:password|secret|token|api[_-]?key)\s*[:=]/i,
+  /(?:inject|eval|exec)\s*\(/i,
+  /(?:drop\s+table|delete\s+from|truncate)\s/i,
+  /(?:<script|javascript:|on\w+\s*=)/i,
+];
+
+// Trust violation: sending messages to non-connected DIDs repeatedly
+const TRUST_VIOLATION_THRESHOLD = 5; // 5+ rejected messages in a window
+
 /**
  * Record an incoming message in the behavior profile and check for anomalies.
  * Returns any newly detected anomalies.
@@ -118,6 +129,35 @@ export function trackAndDetect(
         });
       }
     }
+  }
+
+  // 3. Content pattern detection — look for suspicious payload patterns
+  const messageText = message.content?.text ?? "";
+  if (messageText) {
+    const matches = SUSPICIOUS_PATTERNS.filter((p) => p.test(messageText));
+    if (matches.length > 0) {
+      newAnomalies.push({
+        type: "content_pattern",
+        severity: Math.min(1, 0.5 + matches.length * 0.2),
+        description: `Suspicious content patterns detected (${matches.length} matches)`,
+        detectedAt: nowIso,
+      });
+    }
+  }
+
+  // 4. Trust violation detection — track rejected/unauthorized attempts
+  const recentAnomalies = profile.anomalies.filter(
+    (a) => a.type === "trust_violation" && new Date(a.detectedAt).getTime() > now.getTime() - WINDOW_MS
+  );
+  // This is updated externally when a message is rejected for no relationship
+  // (see messages-core.ts). Here we just check the accumulated count.
+  if (recentAnomalies.length >= TRUST_VIOLATION_THRESHOLD) {
+    newAnomalies.push({
+      type: "trust_violation",
+      severity: Math.min(1, recentAnomalies.length / (TRUST_VIOLATION_THRESHOLD * 2)),
+      description: `${recentAnomalies.length} trust violations in the last 24h`,
+      detectedAt: nowIso,
+    });
   }
 
   // Store anomalies (keep last 20)

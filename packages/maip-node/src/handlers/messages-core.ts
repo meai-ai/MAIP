@@ -5,10 +5,12 @@
  * reused by both HTTP and P2P transports.
  */
 
+import crypto from "node:crypto";
 import {
   MAIPMessageSchema,
   verifyWithDid,
   sign,
+  decrypt,
   type MAIPMessage,
   type MessageAck,
   type TransportResult,
@@ -115,6 +117,21 @@ export function processIncomingMessage(
     };
   }
 
+  // Auto-decrypt encrypted messages
+  if (message.encrypted && message.content.text) {
+    try {
+      const plaintext = decrypt(
+        message.content.text,
+        message.encrypted,
+        ctx.keyPair.encryption.secretKey
+      );
+      message.content.text = plaintext;
+    } catch {
+      // Decryption failed — pass through as-is (may be corrupted or wrong key)
+      console.warn(`[maip-node] Failed to decrypt message ${message.id} from ${message.from}`);
+    }
+  }
+
   // Network isolation check — reject messages from isolated DIDs
   const isolated = ctx.stores.isolations.filter(
     (r) => r.did === message.from && r.status === "active"
@@ -137,6 +154,27 @@ export function processIncomingMessage(
         `[maip-node] Behavioral anomaly detected from ${message.from}: ` +
           severe.map((a) => a.description).join("; ")
       );
+
+      // Auto-escalation: auto-isolate on critical anomalies (severity > 0.9)
+      const critical = severe.filter((a) => a.severity > 0.9);
+      if (critical.length > 0) {
+        const alreadyIsolated = ctx.stores.isolations.filter(
+          (r) => r.did === message.from && r.status === "active"
+        );
+        if (alreadyIsolated.length === 0) {
+          ctx.stores.isolations.add({
+            id: `auto-${Date.now()}`,
+            did: message.from,
+            reason: `Auto-escalated: ${critical.map((a) => a.description).join("; ")}`,
+            category: "other",
+            flaggedBy: [ctx.identity.did],
+            status: "active",
+            isolatedAt: new Date().toISOString(),
+            appealPending: false,
+          });
+          console.warn(`[maip-node] Auto-isolated ${message.from} due to critical anomalies`);
+        }
+      }
     }
   }
 
@@ -162,6 +200,18 @@ export function processIncomingMessage(
         r.permissions.canMessage
     );
     if (rel.length === 0) {
+      // Track this as a trust violation for anomaly detection
+      const existing = ctx.stores.behaviorProfiles.filter((p) => p.did === message.from);
+      if (existing.length > 0) {
+        existing[0].anomalies.push({
+          type: "trust_violation",
+          severity: 0.3,
+          description: `Attempted message without active relationship`,
+          detectedAt: new Date().toISOString(),
+        });
+        ctx.stores.behaviorProfiles.add(existing[0]);
+      }
+
       const ack = createAck(ctx, message.id, "rejected", "No active relationship with messaging permission");
       return {
         ok: false,
@@ -173,8 +223,40 @@ export function processIncomingMessage(
     }
   }
 
+  // Auto-extend sourceChain and compute contentHash for knowledge_share messages
+  if (message.type === "knowledge_share" && message.content.text) {
+    // Compute content hash if not already present
+    if (!message.content.data?.contentHash) {
+      const hash = crypto.createHash("sha256").update(message.content.text).digest("hex");
+      if (!message.content.data) message.content.data = {};
+      message.content.data.contentHash = hash;
+    }
+
+    // Auto-extend sourceChain: append sender DID if not already in chain
+    const chain: string[] = (message.content.sourceChain as string[] | undefined) ?? [];
+    if (!chain.includes(message.from)) {
+      chain.push(message.from);
+    }
+    message.content.sourceChain = chain;
+  }
+
   // Store message
   ctx.stores.messages.add(message);
+
+  // Trust accumulation — update relationship interactionCount and trustLevel
+  const activeRels = ctx.stores.relationships.filter(
+    (r) =>
+      r.status === "active" &&
+      r.participants.includes(message.from) &&
+      r.participants.includes(ctx.identity.did)
+  );
+  for (const rel of activeRels) {
+    rel.interactionCount = (rel.interactionCount ?? 0) + 1;
+    rel.lastInteraction = new Date().toISOString();
+    // Logarithmic trust accumulation: trustLevel = min(1, log2(1 + interactionCount) / 10)
+    rel.trustLevel = Math.min(1, Math.log2(1 + rel.interactionCount) / 10);
+    ctx.stores.relationships.add(rel);
+  }
 
   // Notify message handler if registered
   if (ctx.onMessage) {

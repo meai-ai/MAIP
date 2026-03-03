@@ -32,6 +32,22 @@ export interface RelationshipPermissions {
   maxDailyInteractions?: number;
 }
 
+/** Cultural norms negotiated between two entities. */
+export interface CulturalNorms {
+  /** Preferred language(s) for communication (ISO 639-1 codes). */
+  languages?: string[];
+  /** Formality level (0 = casual, 1 = formal). */
+  formality?: number;
+  /** Topic boundaries — topics the parties agree to avoid. */
+  avoidTopics?: string[];
+  /** Communication style preferences. */
+  style?: "concise" | "detailed" | "conversational";
+  /** Time zone for scheduling (IANA format, e.g., "America/Los_Angeles"). */
+  timezone?: string;
+  /** Response time expectation in minutes (0 = no expectation). */
+  expectedResponseTimeMinutes?: number;
+}
+
 /**
  * MAIP Relationship — a connection between two entities.
  */
@@ -58,6 +74,8 @@ export interface Relationship {
   interactionCount: number;
   /** Optional notes about the relationship. */
   notes?: string;
+  /** Negotiated cultural norms for this relationship. */
+  culturalNorms?: CulturalNorms;
 }
 
 /** Request to establish a new relationship. */

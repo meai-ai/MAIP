@@ -19,6 +19,12 @@ import type {
   SharedSpace,
   SpaceMembership,
   SpaceMessage,
+  GuardianAbuseReport,
+  RightToRefuseRecord,
+  AttentionToken,
+  KnowledgeCreditBalance,
+  KnowledgeCreditTransaction,
+  ReputationStake,
 } from "@maip/core";
 import { JsonStore } from "./json-store.js";
 
@@ -78,6 +84,36 @@ export interface SpaceMessageEntry extends SpaceMessage {
   id: string;
 }
 
+/** Guardian abuse report record. */
+export interface GuardianAbuseReportEntry extends GuardianAbuseReport {
+  id: string;
+}
+
+/** Right-to-refuse record. */
+export interface RightToRefuseEntry extends RightToRefuseRecord {
+  id: string;
+}
+
+/** Attention token entry. */
+export interface AttentionTokenEntry extends AttentionToken {
+  id: string;
+}
+
+/** Knowledge credit balance entry. */
+export interface KnowledgeCreditBalanceEntry extends KnowledgeCreditBalance {
+  id: string;
+}
+
+/** Knowledge credit transaction entry. */
+export interface KnowledgeCreditTransactionEntry extends KnowledgeCreditTransaction {
+  id: string;
+}
+
+/** Reputation stake entry. */
+export interface ReputationStakeEntry extends ReputationStake {
+  id: string;
+}
+
 export class NodeStores {
   readonly messages: JsonStore<MAIPMessage & { id: string }>;
   readonly relationships: JsonStore<Relationship>;
@@ -91,6 +127,12 @@ export class NodeStores {
   readonly spaces: JsonStore<SharedSpaceEntry>;
   readonly spaceMembers: JsonStore<SpaceMembershipEntry>;
   readonly spaceMessages: JsonStore<SpaceMessageEntry>;
+  readonly abuseReports: JsonStore<GuardianAbuseReportEntry>;
+  readonly refusalRecords: JsonStore<RightToRefuseEntry>;
+  readonly attentionTokens: JsonStore<AttentionTokenEntry>;
+  readonly creditBalances: JsonStore<KnowledgeCreditBalanceEntry>;
+  readonly creditTransactions: JsonStore<KnowledgeCreditTransactionEntry>;
+  readonly reputationStakes: JsonStore<ReputationStakeEntry>;
 
   constructor(dataDir: string) {
     if (!fs.existsSync(dataDir)) {
@@ -108,6 +150,12 @@ export class NodeStores {
     this.spaces = new JsonStore(dataDir, "spaces.json");
     this.spaceMembers = new JsonStore(dataDir, "space-members.json");
     this.spaceMessages = new JsonStore(dataDir, "space-messages.json");
+    this.abuseReports = new JsonStore(dataDir, "abuse-reports.json");
+    this.refusalRecords = new JsonStore(dataDir, "refusal-records.json");
+    this.attentionTokens = new JsonStore(dataDir, "attention-tokens.json");
+    this.creditBalances = new JsonStore(dataDir, "credit-balances.json");
+    this.creditTransactions = new JsonStore(dataDir, "credit-transactions.json");
+    this.reputationStakes = new JsonStore(dataDir, "reputation-stakes.json");
   }
 
   /** Purge expired relay messages. */

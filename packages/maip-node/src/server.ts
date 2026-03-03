@@ -6,6 +6,8 @@
  * standalone binary (bin.ts).
  */
 
+import fs from "node:fs";
+import https from "node:https";
 import express, { type Express } from "express";
 import { MAIP_ENDPOINTS } from "@maip/core";
 import type { NodeContext } from "./context.js";
@@ -35,6 +37,26 @@ import {
   postToSpaceHandler,
   getSpaceMessagesHandler,
 } from "./handlers/spaces.js";
+import {
+  rotateKeysHandler,
+  revokeKeyHandler,
+} from "./handlers/key-rotation.js";
+import {
+  abuseReportHandler,
+  getAbuseReportsHandler,
+  rightToRefuseHandler,
+} from "./handlers/guardian-abuse.js";
+import {
+  issueTokensHandler,
+  getTokenBalanceHandler,
+  spendTokensHandler,
+  getCreditBalanceHandler,
+  transferCreditsHandler,
+  awardCreditsHandler,
+  createStakeHandler,
+  resolveStakeHandler,
+  getStakesHandler,
+} from "./handlers/economy.js";
 
 /** Create the Express app with all MAIP routes. */
 export function createApp(ctx: NodeContext): Express {
@@ -117,11 +139,31 @@ export function createApp(ctx: NodeContext): Express {
   app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/transfer/:id/consent`, transferConsentHandler(ctx));
   app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/transfer/:id`, getTransferStatusHandler(ctx));
 
+  // Key rotation endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/rotate-keys`, rotateKeysHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/revoke-key`, revokeKeyHandler(ctx));
+
+  // Guardian abuse and right-to-refuse endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/abuse`, abuseReportHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/abuse/:guardianDid`, getAbuseReportsHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/refuse`, rightToRefuseHandler(ctx));
+
   // Shared Spaces endpoints (v0.2+)
   app.post("/maip/spaces", createSpaceHandler(ctx));
   app.post("/maip/spaces/:id/join", joinSpaceHandler(ctx));
   app.post("/maip/spaces/:id/messages", postToSpaceHandler(ctx));
   app.get("/maip/spaces/:id/messages", getSpaceMessagesHandler(ctx));
+
+  // Economic layer endpoints (v0.2+)
+  app.post("/maip/economy/tokens/issue", issueTokensHandler(ctx));
+  app.get("/maip/economy/tokens/:did", getTokenBalanceHandler(ctx));
+  app.post("/maip/economy/tokens/spend", spendTokensHandler(ctx));
+  app.get("/maip/economy/credits/:did", getCreditBalanceHandler(ctx));
+  app.post("/maip/economy/credits/transfer", transferCreditsHandler(ctx));
+  app.post("/maip/economy/credits/award", awardCreditsHandler(ctx));
+  app.post("/maip/economy/stakes", createStakeHandler(ctx));
+  app.post("/maip/economy/stakes/:id/resolve", resolveStakeHandler(ctx));
+  app.get("/maip/economy/stakes/:did", getStakesHandler(ctx));
 
   return app;
 }
@@ -139,15 +181,30 @@ export function startServer(
   const transportMode = ctx.config.transportMode ?? "http";
   const app = createApp(ctx);
 
-  let httpServer: ReturnType<Express["listen"]> | null = null;
+  let httpServer: ReturnType<Express["listen"]> | ReturnType<typeof https.createServer> | null = null;
 
-  // Start HTTP transport
+  // Start HTTP/HTTPS transport
   if (transportMode === "http" || transportMode === "hybrid") {
-    httpServer = app.listen(ctx.config.port, () => {
-      console.log(`[maip-node] MAIP HTTP server running on port ${ctx.config.port}`);
-      console.log(`[maip-node] DID: ${ctx.identity.did}`);
-      console.log(`[maip-node] Endpoint: ${ctx.config.publicUrl}`);
-    });
+    if (ctx.config.tls) {
+      const tlsOptions: https.ServerOptions = {
+        cert: fs.readFileSync(ctx.config.tls.certPath),
+        key: fs.readFileSync(ctx.config.tls.keyPath),
+        ...(ctx.config.tls.caPath ? { ca: fs.readFileSync(ctx.config.tls.caPath) } : {}),
+      };
+      const server = https.createServer(tlsOptions, app);
+      server.listen(ctx.config.port, () => {
+        console.log(`[maip-node] MAIP HTTPS server running on port ${ctx.config.port}`);
+        console.log(`[maip-node] DID: ${ctx.identity.did}`);
+        console.log(`[maip-node] Endpoint: ${ctx.config.publicUrl}`);
+      });
+      httpServer = server;
+    } else {
+      httpServer = app.listen(ctx.config.port, () => {
+        console.log(`[maip-node] MAIP HTTP server running on port ${ctx.config.port}`);
+        console.log(`[maip-node] DID: ${ctx.identity.did}`);
+        console.log(`[maip-node] Endpoint: ${ctx.config.publicUrl}`);
+      });
+    }
   }
 
   // P2P transport is started separately via startP2PServer() from @maip/transport-p2p
