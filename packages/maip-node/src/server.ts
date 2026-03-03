@@ -57,6 +57,30 @@ import {
   resolveStakeHandler,
   getStakesHandler,
 } from "./handlers/economy.js";
+import {
+  receiveAnomalyHandler,
+  assessThreatHandler,
+  pendingForwardsHandler,
+} from "./handlers/anomaly-sharing.js";
+import {
+  reportBreachHandler,
+  executeRemediationHandler,
+  listBreachesHandler,
+  getBreachHandler,
+} from "./handlers/remediation.js";
+import {
+  guardianCommandHandler,
+  checkActionHandler,
+  getRestrictionsHandler,
+  getCommandsHandler,
+} from "./handlers/guardian-authority.js";
+import {
+  registerRegistryHandler,
+  resolveDidHandler,
+  federationHealthHandler,
+  listRegistriesHandler,
+  updateTrustHandler,
+} from "./handlers/federation.js";
 
 /** Create the Express app with all MAIP routes. */
 export function createApp(ctx: NodeContext): Express {
@@ -164,6 +188,30 @@ export function createApp(ctx: NodeContext): Express {
   app.post("/maip/economy/stakes", createStakeHandler(ctx));
   app.post("/maip/economy/stakes/:id/resolve", resolveStakeHandler(ctx));
   app.get("/maip/economy/stakes/:did", getStakesHandler(ctx));
+
+  // Cross-node anomaly sharing endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/anomaly`, receiveAnomalyHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/threat/:did`, assessThreatHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/anomaly/pending`, pendingForwardsHandler(ctx));
+
+  // Post-leak remediation endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/breach`, reportBreachHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/breach/:id/remediate`, executeRemediationHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/breaches`, listBreachesHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/breach/:id`, getBreachHandler(ctx));
+
+  // Guardian authority enforcement endpoints
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/guardian/command`, guardianCommandHandler(ctx));
+  app.post(`${MAIP_ENDPOINTS.GOVERNANCE}/guardian/check-action`, checkActionHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/guardian/restrictions`, getRestrictionsHandler(ctx));
+  app.get(`${MAIP_ENDPOINTS.GOVERNANCE}/guardian/commands`, getCommandsHandler(ctx));
+
+  // Federation endpoints
+  app.post("/maip/federation/registry", registerRegistryHandler(ctx));
+  app.get("/maip/federation/resolve/:did", resolveDidHandler(ctx));
+  app.get("/maip/federation/health", federationHealthHandler(ctx));
+  app.get("/maip/federation/registries", listRegistriesHandler(ctx));
+  app.post("/maip/federation/trust", updateTrustHandler(ctx));
 
   return app;
 }

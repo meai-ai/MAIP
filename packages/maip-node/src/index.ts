@@ -139,3 +139,77 @@ export {
   toMinimalPayload,
   OfflineQueue,
 } from "./accessibility.js";
+
+// Autonomy State Machine
+export {
+  evaluateAutonomyTransition,
+  processAutonomyTransition,
+  isActionAllowed,
+  getHomecomingConfig,
+} from "./handlers/autonomy-core.js";
+
+// Data Sovereignty
+export {
+  exportNodeData,
+  saveExport,
+  loadExport,
+  importNodeData,
+  type NodeDataExport,
+} from "./data-sovereignty.js";
+
+// Encrypted Store
+export { EncryptedJsonStore } from "./stores/encrypted-store.js";
+
+// Audit Log (tamper-proof records)
+export { AuditLog, type AuditLogEntry } from "./stores/audit-log.js";
+
+// Cross-Node Anomaly Sharing
+export {
+  receiveAnomalyReport,
+  createAnomalyReport,
+  assessThreat,
+  getPendingForwards,
+  type SharedAnomalyReport,
+  type ThreatAssessment,
+} from "./handlers/anomaly-sharing-core.js";
+
+// Labeling Enforcement
+export {
+  validateIdentityLabeling,
+  validateMessageLabeling,
+  enforceLabelingPolicy,
+  type LabelingValidation,
+} from "./handlers/labeling-core.js";
+
+// Post-Leak Remediation
+export {
+  reportBreach,
+  executeRemediation,
+  getBreachReports,
+  getBreachReport,
+  type BreachReport,
+  type BreachSeverity,
+} from "./handlers/remediation-core.js";
+
+// Guardian Authority Enforcement
+export {
+  processGuardianCommand,
+  isActionBlocked,
+  getActiveRestrictions,
+  getCommandHistory,
+  type GuardianCommand,
+  type GuardianCommandType,
+  type ActiveRestrictions,
+} from "./handlers/guardian-authority-core.js";
+
+// Federation
+export {
+  registerFederatedRegistry,
+  resolveDID,
+  getFederationHealth,
+  getFederatedRegistries,
+  updateRegistryTrust,
+  type FederatedRegistry,
+  type DIDResolution,
+  type FederationHealth,
+} from "./handlers/federation-core.js";

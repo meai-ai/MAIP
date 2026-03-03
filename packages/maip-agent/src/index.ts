@@ -45,3 +45,63 @@ export type {
   MeAIChannel as MeAIChannelInterface,
   MeAIMessageHandler,
 } from "./meai-types.js";
+
+// Personality Engine
+export {
+  PersonalityEngine,
+  type PersonalityTrait,
+  type DomainExpertise,
+  type WorldModelEntry,
+  type LearnedCommunicationStyle,
+  type PersonalityState,
+} from "./personality-engine.js";
+
+// Data Interfaces
+export {
+  RSSAdapter,
+  WebSearchAdapter,
+  DataAggregator,
+  type ExternalContent,
+  type DataAdapter,
+} from "./data-interfaces.js";
+
+// Content Production Pipeline
+export {
+  ContentPipeline,
+  type ContentDraft,
+  type PublishedContent,
+  type ContentStage,
+} from "./content-pipeline.js";
+
+// Internalized Values
+export {
+  InternalizedValues,
+  type ValueEntry,
+  type ValueLayer,
+  type ValueDriftEvent,
+  type ValueConflict,
+} from "./internalized-values.js";
+
+// Attachment Safety
+export {
+  AttachmentSafetyMonitor,
+  type AttachmentStyle,
+  type ParasocialRisk,
+  type RelationshipHealth,
+} from "./attachment-safety.js";
+
+// Multilingual & Voice
+export {
+  I18n,
+  NoOpVoiceProvider,
+  type Locale,
+  type LanguageDetection,
+  type VoiceProvider,
+  type TranslationProvider,
+  type TTSRequest,
+  type TTSResult,
+  type STTRequest,
+  type STTResult,
+  type TranslationRequest,
+  type TranslationResult,
+} from "./multilingual.js";

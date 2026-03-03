@@ -102,5 +102,18 @@ export {
   MAIP_HEADERS,
 } from "./transport.js";
 
+export type {
+  AutonomyLevelName,
+  AutonomyTransitionCriteria,
+  AutonomyTransitionRecord,
+} from "./autonomy.js";
+
+export {
+  AUTONOMY_LEVEL_NAMES,
+  AUTONOMY_CAPABILITIES,
+  AUTONOMY_HOMECOMING,
+  AUTONOMY_TRANSITIONS,
+} from "./autonomy.js";
+
 /** Protocol version constant. */
 export const MAIP_VERSION = "0.1.0";
